@@ -1,0 +1,12 @@
+# Vercel
+.vercel
+
+# Node (only if you later add a build step)
+node_modules
+npm-debug.log*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea
+.vscode

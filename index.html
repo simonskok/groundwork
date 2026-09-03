@@ -1,0 +1,948 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#D9772E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23D9772E'/%3E%3Cpath d='M50 22 L61 61 L50 54 L39 61 Z' fill='white'/%3E%3C/svg%3E">
+<title>Groundwork</title>
+<meta name="description" content="The overwhelm of choosing a tech stack, untangled. Answer a few plain questions and watch the decisions clear into one honest path.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --bg:#F7F4EF; --surface:#FFFFFF; --surface-2:#F2EEE6;
+    --ink:#1A1712; --muted:#6A6157; --faint:#9A9186;
+    --line:#EAE3D8; --line-strong:#D9D0C2;
+    --warm:#D9772E; --warm-soft:#FBEEE2; --warm-line:#EBC9A6;
+    --cool:#2E6E88; --cool-soft:#E4EEF2; --cool-line:#B9D4DE;
+    --good:#2F8F66; --good-soft:#E3F1EA;
+    --caution:#C2571F; --caution-soft:#F7E7DC;
+    --shadow:0 1px 2px rgba(16,28,44,.04),0 10px 34px rgba(16,28,44,.06);
+    --canvas-bg:#0E1622; --canvas-grid:#1B2735;
+  }
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+    --bg:#0C1219; --surface:#121A24; --surface-2:#182430;
+    --ink:#EAF0F7; --muted:#9AA7B6; --faint:#6B7887;
+    --line:#213141; --line-strong:#2C3F53;
+    --warm:#E8934A; --warm-soft:#2A2015; --warm-line:#4A371F;
+    --cool:#5FA6C2; --cool-soft:#152730; --cool-line:#274554;
+    --good:#48BE8B; --good-soft:#14261E;
+    --caution:#E07B44; --caution-soft:#2A1A11;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 12px 38px rgba(0,0,0,.4);
+    --canvas-bg:#0A1017; --canvas-grid:#16212E;
+  }}
+  :root[data-theme="dark"]{
+    --bg:#0C1219; --surface:#121A24; --surface-2:#182430;
+    --ink:#EAF0F7; --muted:#9AA7B6; --faint:#6B7887;
+    --line:#213141; --line-strong:#2C3F53;
+    --warm:#E8934A; --warm-soft:#2A2015; --warm-line:#4A371F;
+    --cool:#5FA6C2; --cool-soft:#152730; --cool-line:#274554;
+    --good:#48BE8B; --good-soft:#14261E;
+    --caution:#E07B44; --caution-soft:#2A1A11;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 12px 38px rgba(0,0,0,.4);
+    --canvas-bg:#0A1017; --canvas-grid:#16212E;
+  }
+
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:"IBM Plex Sans",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  .wrap{width:min(900px,calc(100% - 44px));margin:0 auto}
+  h1,h2,h3{font-family:"Archivo",sans-serif;font-weight:700;letter-spacing:-.02em;line-height:1.1;text-wrap:balance}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--warm)}
+  .muted{color:var(--muted)}
+  code{font-family:"IBM Plex Mono",monospace;font-size:.85em;background:var(--surface-2);border:1px solid var(--line);border-radius:5px;padding:.06em .36em}
+
+  header.top{border-bottom:1px solid var(--line);background:linear-gradient(180deg,var(--surface),transparent)}
+  .masthead{padding:18px 0;display:flex;align-items:center;justify-content:space-between;gap:14px}
+  .brandmark{display:flex;align-items:center;gap:10px;font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:13px;letter-spacing:.02em}
+  .spark{width:26px;height:26px;border-radius:7px;background:var(--warm);color:#fff;display:grid;place-items:center;font-size:14px;box-shadow:0 4px 12px rgba(217,119,46,.35)}
+  .topmeta{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--faint)}
+
+  /* Stage: canvas + copy */
+  .stage{padding:34px 0 8px}
+  .stage h1{font-family:"Fraunces",Georgia,serif;font-optical-sizing:auto;font-size:clamp(29px,4.8vw,47px);font-weight:600;letter-spacing:-.018em;line-height:1.04;margin:12px 0 0}
+  .stage h1 i{font-style:italic;font-weight:500}
+  .verdict h2{font-family:"Fraunces",Georgia,serif;font-optical-sizing:auto;font-weight:600;letter-spacing:-.015em}
+  .verdict h2 i{font-style:italic;font-weight:500}
+  .stage .lede{font-size:clamp(15px,2vw,18px);color:var(--muted);max-width:56ch;margin:16px 0 0}
+  .figurewrap{margin:22px 0 0;border-radius:18px;overflow:hidden;border:1px solid var(--line-strong);background:var(--canvas-bg);box-shadow:var(--shadow);position:relative}
+  canvas#web{display:block;width:100%;height:clamp(300px,46vw,460px)}
+  .figcap{position:absolute;left:16px;bottom:12px;right:16px;font-family:"IBM Plex Mono",monospace;font-size:11px;color:#9fb0c2;letter-spacing:.04em;pointer-events:none;text-shadow:0 1px 8px rgba(0,0,0,.5)}
+  .figcap b{color:#fff}
+  .clearbar{position:absolute;top:14px;left:16px;right:16px;height:4px;border-radius:99px;background:rgba(255,255,255,.09);overflow:hidden}
+  .clearbar i{display:block;height:100%;width:0;background:var(--warm);border-radius:99px;transition:width .5s cubic-bezier(.2,.7,.3,1)}
+
+  /* Form */
+  form{padding:22px 0 40px}
+  .qcard{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;margin:12px 0;box-shadow:var(--shadow)}
+  .qhead{display:flex;align-items:baseline;gap:11px;margin-bottom:6px}
+  .qnum{font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:600;color:var(--warm)}
+  .qtitle{font-family:"Archivo",sans-serif;font-weight:600;font-size:16px}
+  .qhint{font-size:13px;color:var(--faint);margin:0 0 12px}
+  textarea{width:100%;min-height:82px;resize:vertical;border:1px solid var(--line-strong);background:var(--bg);color:var(--ink);border-radius:11px;padding:12px 13px;font:inherit;font-size:15px;line-height:1.5;outline:0;margin-top:8px}
+  textarea::placeholder{color:var(--faint)}
+  .opts{display:flex;flex-wrap:wrap;gap:9px;margin-top:6px}
+  .opt{font-size:14px;font-weight:500;padding:9px 14px;border-radius:999px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);cursor:pointer;transition:.12s}
+  .opt:hover{border-color:var(--warm-line)}
+  .opt[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+
+  .cta{position:sticky;bottom:16px;margin-top:22px;display:flex;justify-content:center;z-index:5}
+  .cta button{font-family:"Archivo",sans-serif;font-weight:700;font-size:16px;color:#fff;background:var(--warm);border:0;border-radius:12px;padding:15px 30px;cursor:pointer;box-shadow:0 10px 26px rgba(217,119,46,.36)}
+  .cta button:hover{filter:brightness(1.04)}
+  .cta button:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
+  .cta .hint{align-self:center;margin-left:12px;font-size:12px;color:var(--faint);font-family:"IBM Plex Mono",monospace}
+
+  /* Results */
+  .results{padding:8px 0 70px;display:none}
+  .verdict{border:1px solid var(--warm-line);background:linear-gradient(180deg,var(--warm-soft),var(--surface));border-radius:16px;padding:24px;box-shadow:var(--shadow)}
+  .verdict h2{font-size:clamp(21px,3.2vw,29px);margin:9px 0 8px}
+  .verdict p{margin:0;color:var(--muted);max-width:62ch}
+  .approach{margin-top:15px;display:inline-flex;align-items:center;gap:8px;font-family:"IBM Plex Mono",monospace;font-size:13px;background:var(--surface);border:1px solid var(--warm-line);border-radius:999px;padding:7px 14px}
+  .approach b{color:var(--ink);font-weight:600}
+  .sectlabel{font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:32px 0 12px}
+
+  .modules{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+  @media (max-width:640px){.modules{grid-template-columns:1fr}}
+  .mod{border:1px solid var(--line);background:var(--surface);border-radius:13px;padding:16px 17px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:5px}
+  .mod .role{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--cool)}
+  .mod .pick{font-family:"Archivo",sans-serif;font-weight:700;font-size:17px}
+  .mod .why{font-size:13.5px;color:var(--muted);line-height:1.5}
+  .mod .badge{align-self:flex-start;font-family:"IBM Plex Mono",monospace;font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;padding:3px 8px;border-radius:999px}
+  .b-core{background:var(--good-soft);color:var(--good);border:1px solid color-mix(in srgb,var(--good) 30%,transparent)}
+  .b-later{background:var(--surface-2);color:var(--muted);border:1px solid var(--line-strong)}
+  .b-heads{background:var(--caution-soft);color:var(--caution);border:1px solid color-mix(in srgb,var(--caution) 30%,transparent)}
+  .mod details{margin-top:4px}
+  .mod summary{cursor:pointer;font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--cool);list-style:none}
+  .mod summary::-webkit-details-marker{display:none}
+  .mod summary::after{content:" ▸"}
+  .mod details[open] summary::after{content:" ▾"}
+  .mod .alts{margin:8px 0 0;padding:0;list-style:none;display:grid;gap:5px}
+  .mod .alts li{font-size:12.5px;color:var(--muted);padding-left:14px;position:relative}
+  .mod .alts li:before{content:"×";position:absolute;left:0;color:var(--faint)}
+  .mod .alts b{color:var(--ink);font-weight:600}
+
+  .plan{border:1px solid var(--line);border-radius:14px;background:var(--surface);overflow:hidden;box-shadow:var(--shadow)}
+  .plan .step{display:grid;grid-template-columns:auto 1fr;gap:15px;padding:15px 18px;border-top:1px solid var(--line)}
+  .plan .step:first-child{border-top:0}
+  .plan .n{font-family:"Archivo",sans-serif;font-weight:800;font-size:14px;width:30px;height:30px;border-radius:8px;background:var(--ink);color:var(--bg);display:grid;place-items:center}
+  .plan .step p{margin:0;font-size:14px;color:var(--muted)}
+  .plan .step b{color:var(--ink);font-weight:600}
+
+  .costrow{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 16px;border:1px solid var(--line);border-radius:13px;background:var(--surface);padding:18px 20px;box-shadow:var(--shadow)}
+  .costrow .big{font-family:"Archivo",sans-serif;font-weight:800;font-size:27px}
+  .costrow .cap{font-size:13.5px;color:var(--muted);max-width:60ch}
+
+  .tips{display:grid;gap:9px}
+  .tip{display:grid;grid-template-columns:auto 1fr;gap:11px;font-size:14px;color:var(--muted);background:var(--surface-2);border:1px solid var(--line);border-radius:11px;padding:12px 14px}
+  .tip b{color:var(--ink);font-weight:600}.tip .i{color:var(--warm);font-weight:800}
+
+  .actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px}
+  .btn{font-weight:600;font-size:14px;padding:11px 18px;border-radius:11px;cursor:pointer;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink)}
+  .btn.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+  .disclaimer{margin-top:20px;font-size:12.5px;color:var(--faint);max-width:64ch}
+
+  /* Share */
+  .sharecard{margin-top:12px;border:1px dashed var(--warm-line);background:var(--warm-soft);border-radius:14px;padding:18px 20px}
+  .sharecard h3{font-family:"Archivo",sans-serif;font-weight:700;font-size:16px;margin:0 0 4px}
+  .sharecard p{margin:0 0 12px;font-size:13.5px;color:var(--muted);max-width:60ch}
+  .sharerow{display:flex;flex-wrap:wrap;gap:8px}
+  .sharelink{flex:1 1 240px;min-width:0;font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--ink);background:var(--surface);border:1px solid var(--warm-line);border-radius:10px;padding:10px 12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;outline:0}
+  .sharebtn{font-family:"IBM Plex Sans",sans-serif;font-weight:600;font-size:13.5px;padding:10px 16px;border-radius:10px;cursor:pointer;border:1px solid var(--ink);background:var(--ink);color:var(--bg);white-space:nowrap}
+  .sharebtn.ghost{background:var(--surface);color:var(--ink);border-color:var(--warm-line)}
+  .sharebtn:hover{filter:brightness(1.06)}
+  .mapcard{margin-top:12px;border:1px solid var(--warm-line);background:var(--warm-soft);border-radius:14px;padding:18px 20px}
+  .mapcard h3{font-family:"Archivo",sans-serif;font-weight:700;font-size:16px;margin:0 0 4px}
+  .mapcard p{margin:0 0 12px;font-size:13.5px;color:var(--muted);max-width:62ch}
+  .maprow{display:flex;flex-wrap:wrap;gap:8px}
+  #mapemail{flex:1 1 240px;min-width:0;font-family:"IBM Plex Sans",sans-serif;font-size:14px;color:var(--ink);background:var(--surface);border:1px solid var(--warm-line);border-radius:10px;padding:10px 12px;outline:0}
+  #mapemail:focus{border-color:var(--ink)}
+  .mapnote{margin:10px 0 0!important;font-size:12px;color:var(--muted)}
+  .sharedbanner{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin:0 0 16px;padding:12px 16px;border:1px solid var(--cool-line);background:var(--cool-soft);border-radius:12px;font-size:13.5px;color:var(--muted)}
+  .sharedbanner b{color:var(--ink);font-weight:600}
+  .sharedbanner button{margin-left:auto;font-family:"IBM Plex Sans",sans-serif;font-weight:600;font-size:13px;padding:8px 14px;border-radius:9px;cursor:pointer;border:1px solid var(--cool-line);background:var(--surface);color:var(--ink)}
+  .sharedbanner button:hover{border-color:var(--cool)}
+
+  /* Step 3, AI tailoring */
+  .tailorwrap{margin-top:10px;display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+  .tailorbtn{font-family:"IBM Plex Sans",sans-serif;font-weight:600;font-size:13.5px;padding:9px 15px;border-radius:10px;cursor:pointer;border:1px solid var(--cool-line);background:var(--cool-soft);color:var(--cool)}
+  .tailorbtn:hover{filter:brightness(1.04)}
+  .tailorbtn:disabled{opacity:.55;cursor:default}
+  .tailornote{font-size:12.5px;color:var(--faint);font-family:"IBM Plex Mono",monospace}
+  .tailornote.err{color:var(--caution)}
+  .qcard.ai{border-color:var(--cool-line);background:linear-gradient(180deg,var(--cool-soft),var(--surface))}
+  .qcard.ai .qnum{color:var(--cool)}
+  .aitag{display:inline-block;font-family:"IBM Plex Mono",monospace;font-size:9.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--cool);border:1px solid var(--cool-line);border-radius:999px;padding:2px 7px;margin-left:8px;vertical-align:middle}
+  .aicard{margin:0 0 4px;border:1px solid var(--cool-line);background:linear-gradient(180deg,var(--cool-soft),var(--surface));border-radius:14px;padding:16px 18px}
+  .aicard .k{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--cool)}
+  .aicard h3{font-family:"Archivo",sans-serif;font-weight:700;font-size:16px;margin:4px 0 9px}
+  .aicard ul{margin:0;padding:0;list-style:none;display:grid;gap:8px}
+  .aicard li{font-size:14px;color:var(--muted);line-height:1.5;padding-left:19px;position:relative}
+  .aicard li:before{content:"✦";position:absolute;left:0;color:var(--cool)}
+  .aicard li b{color:var(--ink);font-weight:600}
+
+  /* Step 4, spin up */
+  .spinkit{margin:0;border:1px solid var(--line);background:var(--surface);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow)}
+  .spinkit h3{font-family:"Archivo",sans-serif;font-weight:700;font-size:17px;margin:0 0 4px}
+  .spinkit .sk-sub{margin:0 0 14px;font-size:13.5px;color:var(--muted);max-width:62ch}
+  .sk-steps{display:grid;gap:8px;margin:0 0 4px}
+  .sk-step{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:11px 13px;border:1px solid var(--line);border-radius:11px;background:var(--surface-2)}
+  .sk-step .n{font-family:"Archivo",sans-serif;font-weight:800;font-size:12px;width:24px;height:24px;border-radius:7px;background:var(--ink);color:var(--bg);display:grid;place-items:center}
+  .sk-step .t{font-size:14px;min-width:0}
+  .sk-step .t b{font-weight:600;color:var(--ink)}
+  .sk-step .t span{display:block;color:var(--muted);font-size:12.5px;margin-top:1px}
+  .sk-go{font-family:"IBM Plex Sans",sans-serif;font-weight:600;font-size:12.5px;text-decoration:none;padding:7px 12px;border-radius:9px;border:1px solid var(--warm-line);color:var(--warm);background:var(--surface);white-space:nowrap}
+  .sk-go:hover{background:var(--warm-soft)}
+  .sk-label{font-family:"IBM Plex Mono",monospace;font-size:10.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:16px 0 7px}
+  .sk-env{font-family:"IBM Plex Mono",monospace;font-size:12.5px;background:var(--canvas-bg);color:#dfe7f0;border-radius:10px;padding:13px 15px;overflow-x:auto;white-space:pre;line-height:1.55;margin:0}
+  .sk-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:14px}
+  .sk-deploy{display:inline-flex;align-items:center;gap:8px;font-family:"IBM Plex Sans",sans-serif;font-weight:700;font-size:14px;text-decoration:none;color:#fff;background:var(--ink);border:0;border-radius:11px;padding:12px 18px;cursor:pointer}
+  .sk-deploy:hover{filter:brightness(1.1)}
+  .sk-ghost{font-family:"IBM Plex Sans",sans-serif;font-weight:600;font-size:13.5px;padding:11px 16px;border-radius:11px;cursor:pointer;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink)}
+  .sk-ghost:hover{border-color:var(--cool-line)}
+
+  /* Modal (build brief) */
+  .modalbg{position:fixed;inset:0;background:rgba(8,12,18,.62);display:flex;align-items:center;justify-content:center;padding:20px;z-index:60}
+  .modal{background:var(--surface);border:1px solid var(--line-strong);border-radius:16px;max-width:700px;width:100%;max-height:86vh;overflow:auto;padding:22px 24px;box-shadow:var(--shadow)}
+  .modal .mhead{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+  .modal h3{font-family:"Archivo",sans-serif;font-size:19px;margin:0 0 6px}
+  .modal p.msub{margin:0 0 12px;font-size:13.5px;color:var(--muted)}
+  .modal .x{cursor:pointer;border:0;background:transparent;font-size:22px;line-height:1;color:var(--muted)}
+  .modal textarea{width:100%;min-height:340px;resize:vertical;font-family:"IBM Plex Mono",monospace;font-size:12.5px;line-height:1.5;border:1px solid var(--line-strong);background:var(--bg);color:var(--ink);border-radius:11px;padding:12px 13px;outline:0}
+
+  /* Folded-in model */
+  .model{padding:40px 0;border-top:1px solid var(--line)}
+  .twocol{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+  @media (max-width:640px){.twocol{grid-template-columns:1fr}}
+  .layer{border-radius:13px;border:1px solid var(--line);background:var(--surface);padding:18px;box-shadow:var(--shadow)}
+  .layer.value{border-color:var(--warm-line);background:linear-gradient(180deg,var(--warm-soft),var(--surface))}
+  .layer h3{font-size:16px;margin:0 0 5px}
+  .layer p{margin:0;font-size:13.5px;color:var(--muted)}
+  .layer .k{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  .layer.value .k{color:var(--warm)}
+
+  footer{padding:24px 0 54px;border-top:1px solid var(--line);color:var(--faint);font-family:"IBM Plex Mono",monospace;font-size:11.5px;line-height:1.7}
+  .welcome{display:flex;gap:16px;align-items:flex-start;border:1px solid var(--warm-line);
+    background:linear-gradient(165deg,var(--warm-soft),var(--surface) 70%);border-radius:18px;
+    padding:22px 26px;margin:0 0 28px;box-shadow:var(--shadow)}
+  .welcome .wm-ico{font-size:26px;line-height:1;margin-top:2px}
+  .welcome .wm-b{font-family:"Archivo",sans-serif;font-weight:700;font-size:16.5px;margin:0 0 7px;color:var(--ink);line-height:1.3}
+  .welcome p{margin:0;font-size:14.5px;color:var(--muted);line-height:1.65;max-width:58ch}
+  .welcome em{color:var(--warm);font-style:normal;font-weight:600}
+  .creed{font-family:"Archivo",sans-serif;font-weight:600;font-size:clamp(16px,2.3vw,20px);
+    color:var(--ink);margin:22px 0 0;line-height:1.6;letter-spacing:-.01em;max-width:56ch}
+  .creed b{color:var(--warm);font-weight:700}
+  .reassure{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 0}
+  .reassure span{font-size:12.5px;color:var(--muted);background:var(--surface);border:1px solid var(--line);
+    border-radius:999px;padding:6px 13px;display:inline-flex;align-items:center;gap:6px}
+  .reassure span:before{content:"✓";color:var(--warm);font-weight:800}
+  .ctareassure{margin:12px 0 0;font-size:12.5px;color:var(--faint);line-height:1.5;max-width:56ch}
+  :focus-visible{outline:2.5px solid var(--warm);outline-offset:2px;border-radius:6px}
+</style>
+
+<header class="top">
+  <div class="wrap masthead">
+    <div class="brandmark"><span class="spark" aria-hidden="true">🧭</span> GROUNDWORK</div>
+    <div class="topmeta">decide your stack · v1</div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="stage">
+    <div class="welcome">
+      <span class="wm-ico" aria-hidden="true">🌱</span>
+      <div>
+        <p class="wm-b">You've spent years watching other people make things. This is where you cross over.</p>
+        <p>You don't need to be technical, and you don't need the right words. You need one honest guide, an idea worth building, and the courage to begin. You've already brought all three, or you wouldn't be here.</p>
+      </div>
+    </div>
+    <span class="eyebrow" id="eyebrow">From watching to making</span>
+    <h1 id="headline">The idea in your head <i>deserves</i> to exist.<br>Let's build it, one honest step at a time.</h1>
+    <p class="lede" id="lede">Every idea begins as a tangle of decisions, and that tangle is where most people give up. Answer a few plain questions and watch it settle into a single, clear path, with the reasoning behind every step. No jargon unless you ask for it, and nothing you don't truly need.</p>
+    <p class="creed">Less feeding, more <b>building</b>. Less wasting, more <b>producing</b>. Less forgetting, more <b>remembering</b>.</p>
+    <div class="reassure">
+      <span>Plain language, jargon only if you ask</span>
+      <span>Recommends less, never upsells</span>
+      <span>Change any answer, anytime</span>
+      <span>Free to start</span>
+    </div>
+    <div class="figurewrap">
+      <div class="clearbar" aria-hidden="true"><i id="clearfill"></i></div>
+      <canvas id="web" role="img" aria-label="A tangle of tech-stack decisions that clears into a single chosen path as you answer."></canvas>
+      <div class="figcap" id="figcap"><b>34 options</b> across 13 decisions. Answer below, and the noise settles into one clear path.</div>
+    </div>
+  </section>
+
+  <form id="form" aria-label="Stack questionnaire">
+    <div class="qcard">
+      <div class="qhead"><span class="qnum">01</span><span class="qtitle">What are you building?</span></div>
+      <p class="qhint">A sentence or two in your own words, the more concrete, the sharper the advice.</p>
+      <textarea id="idea" placeholder="e.g. A tool where wedding photographers upload a gallery and clients pick favourites, then order prints."></textarea>
+      <div class="tailorwrap"><button type="button" class="tailorbtn" id="tailorbtn" hidden>✨ Read my idea &amp; ask a smart follow-up</button><span class="tailornote" id="tailornote"></span></div>
+    </div>
+    <div id="followups"></div>
+    <div class="qcard"><div class="qhead"><span class="qnum">02</span><span class="qtitle">What kind of thing is it?</span></div>
+      <div class="opts" data-q="type" role="group" aria-label="Type">
+        <button type="button" class="opt" data-v="website">Website / landing</button><button type="button" class="opt" data-v="webapp">Web app / SaaS</button><button type="button" class="opt" data-v="marketplace">Marketplace / store</button><button type="button" class="opt" data-v="aitool">AI tool</button><button type="button" class="opt" data-v="content">Blog / content</button><button type="button" class="opt" data-v="internal">Internal tool</button></div></div>
+    <div class="qcard"><div class="qhead"><span class="qnum">03</span><span class="qtitle">Do people log in?</span></div>
+      <div class="opts" data-q="accounts" role="group" aria-label="Accounts"><button type="button" class="opt" data-v="yes">Yes</button><button type="button" class="opt" data-v="no">No</button></div></div>
+    <div class="qcard"><div class="qhead"><span class="qnum">04</span><span class="qtitle">Will you charge money?</span></div>
+      <div class="opts" data-q="pay" role="group" aria-label="Payments"><button type="button" class="opt" data-v="yes">Yes, from the start</button><button type="button" class="opt" data-v="later">Maybe later</button><button type="button" class="opt" data-v="no">No / free</button></div></div>
+    <div class="qcard"><div class="qhead"><span class="qnum">05</span><span class="qtitle">Files or heavy processing?</span></div>
+      <p class="qhint">Video, big images, documents, audio, OCR, running a model, anything that takes real compute time.</p>
+      <div class="opts" data-q="heavy" role="group" aria-label="Heavy"><button type="button" class="opt" data-v="yes">Yes</button><button type="button" class="opt" data-v="no">No</button></div></div>
+    <div class="qcard"><div class="qhead"><span class="qnum">06</span><span class="qtitle">Does it use AI?</span></div>
+      <div class="opts" data-q="ai" role="group" aria-label="AI"><button type="button" class="opt" data-v="yes">Yes</button><button type="button" class="opt" data-v="no">No</button></div></div>
+    <div class="qcard"><div class="qhead"><span class="qnum">07</span><span class="qtitle">Anything live / real-time?</span></div>
+      <p class="qhint">Chat, live collaboration, presence, instant updates between people.</p>
+      <div class="opts" data-q="realtime" role="group" aria-label="Realtime"><button type="button" class="opt" data-v="yes">Yes</button><button type="button" class="opt" data-v="no">No</button></div></div>
+    <div class="qcard"><div class="qhead"><span class="qnum">08</span><span class="qtitle">Where are you today?</span></div>
+      <div class="opts" data-q="comfort" role="group" aria-label="Comfort"><button type="button" class="opt" data-v="nontech">Not technical</button><button type="button" class="opt" data-v="some">I can tinker</button><button type="button" class="opt" data-v="dev">I can code</button></div></div>
+    <div class="qcard"><div class="qhead"><span class="qnum">09</span><span class="qtitle">What matters most right now?</span></div>
+      <div class="opts" data-q="priority" role="group" aria-label="Priority"><button type="button" class="opt" data-v="speed">Launch fast</button><button type="button" class="opt" data-v="cost">Spend the least</button><button type="button" class="opt" data-v="scale">Build to scale</button></div></div>
+    <div class="cta"><button type="submit" id="go" disabled>Light up my path →</button><span class="hint" id="answered">0 / 8 answered</span></div>
+    <p class="ctareassure">There are no wrong answers here. Nothing is charged and nothing gets installed, you'll just see your path, and you can change any answer whenever you like.</p>
+  </form>
+
+  <div class="results" id="results" aria-live="polite"></div>
+
+  <section class="model">
+    <span class="eyebrow">Why the path looks the way it does</span>
+    <h2 style="font-size:clamp(20px,3vw,26px);margin:8px 0 0">Two layers. You only ever live in one.</h2>
+    <div class="twocol">
+      <div class="layer value"><span class="k">where you spend your time</span><h3>The product layer</h3><p>Features, data quality, the UI, the words, distribution. The only place ideas compound, and where every answer above is really aimed.</p></div>
+      <div class="layer"><span class="k">configure once, forget</span><h3>The platform layer</h3><p>Hosting, database, auth, payments, email. Wired once with native integrations, then it runs itself. Everything the tool picks lives here so you don't have to think about it again.</p></div>
+    </div>
+    <p class="muted" style="font-size:13.5px;margin-top:14px;max-width:64ch">The knot feels big because it's the whole platform layer at once. The trick isn't to be a genius about it. It's to make each decision a choice between two or three known options, decide once, and get back to the product.</p>
+  </section>
+</main>
+
+<footer><div class="wrap">GROUNDWORK · decide your stack · v1 · a guided decision, not a black box<br>Recommendations are opinionated starting points. You own every choice.</div></footer>
+
+<script>
+var $=function(s,r){return (r||document).querySelector(s)};
+var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+var answers={type:"",accounts:"",pay:"",heavy:"",ai:"",realtime:"",comfort:"",priority:""};
+var REQUIRED=["type","accounts","pay","heavy","ai","realtime","comfort","priority"];
+
+/* ---------- Decision registry: stages (tentacles) × options (nodes) -------- */
+var STAGES=[
+ {key:"build",  label:"Build with",   opts:[["claudecode","Claude Code"],["cursor","Cursor"],["lovable","Lovable"],["bolt","Bolt"]]},
+ {key:"repo",   label:"Code home",    opts:[["github","GitHub"]]},
+ {key:"front",  label:"Frontend",     opts:[["vercel","Vercel"],["netlify","Netlify"],["cfpages","Cloudflare"]]},
+ {key:"compute",label:"Backend",      opts:[["serverless","Serverless"],["render","Render"],["railway","Railway"],["fly","Fly.io"],["cloudrun","Cloud Run"]]},
+ {key:"data",   label:"Data + auth",  opts:[["supabase","Supabase"],["firebase","Firebase"],["neon","Neon + Clerk"]]},
+ {key:"ai",     label:"AI",           opts:[["anthropic","Anthropic"],["openai","OpenAI"]]},
+ {key:"pay",    label:"Payments",     opts:[["stripe","Stripe"],["lemon","Lemon Squeezy"],["paddle","Paddle"]]},
+ {key:"email",  label:"Email",        opts:[["resend","Resend"],["postmark","Postmark"],["sendgrid","SendGrid"]]},
+ {key:"analytics",label:"Analytics",  opts:[["posthog","PostHog"],["plausible","Plausible"],["ga","GA4"]]},
+ {key:"errors", label:"Errors",       opts:[["sentry","Sentry"]]},
+ {key:"realtime",label:"Real-time",   opts:[["sbrt","Supabase RT"],["pusher","Pusher"],["ably","Ably"]]},
+ {key:"queue",  label:"Job queue",    opts:[["upstash","Upstash"]]},
+ {key:"dns",    label:"Domain + DNS", opts:[["namecheap","Namecheap"],["cloudflare","Cloudflare"]]}
+];
+
+/* precompute polar layout: each stage a tentacle angle, options along it */
+var NODES=[], LINKS=[], CENTER={}, clarity=0;
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
+(function layout(){
+  var rnd=mulberry32(20260902);
+  STAGES.forEach(function(st){st.opts.forEach(function(o){
+    // scattered blob, not a tidy ring: golden-angle base + strong jitter + wide radius spread
+    var i=NODES.length, ang=i*2.39996323+(rnd()-0.5)*1.25, r=0.30+rnd()*0.66;
+    NODES.push({stage:st.key,id:o[0],label:o[1],ang:ang,r:r,cur:{a:0,s:0},tgt:{a:1,s:1},role:"pending",seed:rnd()*6.28});
+  });});
+  // cross-links across the blob (co-prime hops guarantee long, crossing lines = a real tangle)
+  var K=NODES.length;
+  for(var i=0;i<K;i++){ LINKS.push({a:i,b:(i+7)%K,cur:0,tgt:0,seed:rnd()*6.28}); if(i%2===0) LINKS.push({a:i,b:(i+13)%K,cur:0,tgt:0,seed:rnd()*6.28}); }
+})();
+
+/* ---------- The recommendation engine ------------------------------------- */
+function recommend(a, idea){
+  var heavy=a.heavy==="yes", ai=a.ai==="yes", rt=a.realtime==="yes",
+      auth=a.accounts==="yes", charge=(a.pay==="yes"||a.pay==="later"), chargeNow=a.pay==="yes",
+      nonTech=a.comfort==="nontech", dev=a.comfort==="dev",
+      simple=(a.type==="website"||a.type==="content"), big=a.priority==="scale",
+      cost=a.priority==="cost";
+  var pureSite = nonTech && simple && !heavy && !ai && !rt && !auth;
+
+  var verdict,sub,approach,mods=[],plan=[],tips=[],costLow=0,costHigh=0;
+  if(pureSite){verdict="You don't need a custom stack yet.";sub="What you're describing is a site, not a system. A no-code builder gets you live this week, looks great, and costs almost nothing. Come back for the full stack when you add accounts, payments, or real logic.";approach="No-code builder, Framer or Webflow";}
+  else if(nonTech && !heavy){verdict="Start in an AI app builder, on standard rails.";sub="You can describe your app and have a working version fast, as long as it generates a normal, portable stack you grow into, not a locked box. The picks below are exactly what a good builder should output.";approach="AI app builder (Lovable / Bolt) → Supabase + Vercel";}
+  else if(heavy){verdict="You need a real backend. Here's the honest stack.";sub="Because your app does heavy work, it can't live on serverless alone. It needs a small always-on engine. Everything else stays managed and simple.";approach=dev?"Claude Code on a real repo":"AI builder for the app + a container host for the engine";}
+  else{verdict="A clean, standard stack fits perfectly.";sub="No heavy compute, so you stay almost entirely on managed, mostly-free services and move fast. This is the sweet spot the whole modern stack is designed for.";approach=dev?"Claude Code on a real repo":"AI app builder (Lovable / Bolt), standard rails";}
+
+  /* chosen option id per stage + whether the stage is active (else spared) */
+  var G={active:{},chosen:{}};
+  function pick(stage,id,active){G.active[stage]=active!==false;if(active!==false)G.chosen[stage]=id;}
+
+  var buildId = nonTech?"lovable":(dev?"claudecode":"lovable");
+  pick("build", buildId, true);
+  pick("repo","github", true);
+  pick("front", cost?"cfpages":"vercel", !pureSite || true); // always host something
+  pick("compute", heavy?"render":"serverless", true);
+  pick("data","supabase", !pureSite);
+  pick("ai","anthropic", ai);
+  pick("pay","stripe", charge);
+  pick("email","resend", auth||charge);
+  pick("analytics", cost?"plausible":"posthog", true);
+  pick("errors","sentry", true);           // active but flagged "later"
+  pick("realtime","sbrt", rt);
+  pick("queue","upstash", heavy&&big);
+  pick("dns","cloudflare", true);
+
+  /* modules (cards) with alternatives + why-not */
+  function mod(role,pick,why,badge,alts){mods.push({role:role,pick:pick,why:why,badge:badge||"",alts:alts||[]})}
+  mod("Build with", nonTech?"Lovable / Bolt":(dev?"Claude Code":"Lovable, then Claude Code"),
+    nonTech?"Describe what you want; it writes the app on a normal stack you can export.":(dev?"An AI pair that edits your real repo and commits, no copy-paste.":"Prototype in a builder, then refine in Claude Code on the repo."),"core",
+    [["Cursor","a code editor with AI, great once you're comfortable in code"],["v0","best for polished UI, less for full apps"]]);
+  mod("Code home","GitHub","Where the code lives and the one thing every service connects to. This is what ends copy-paste.","core",[["GitLab / Bitbucket","fine, but GitHub has the widest integrations"]]);
+  if(pureSite) mod("Site","Framer or Webflow","Design-first, publishes itself, no code. Add a domain and you're live.","core",[["WordPress","heavier and more to maintain for a simple site"]]);
+  else mod("Frontend host", cost?"Cloudflare Pages":"Vercel", cost?"Cheapest way to host a fast frontend, with a generous free tier.":"Hosts the interface and gives every change a live preview link. Free to start.","core",[["Netlify","same idea as Vercel, smaller ecosystem"],[cost?"Vercel":"Cloudflare Pages", cost?"lovely DX, but pricier than Cloudflare at rest":"cheapest, but a more limited runtime"]]);
+  if(heavy) mod("Engine host","Render (Docker)","Your files/processing need an always-on container, serverless can't run long jobs or big libraries. Push-to-deploy, ~$7–25/mo.","heads",[["Railway","great DX, usage-based bill can creep"],["Fly.io","global + more control, a bit more setup"],["Cloud Run","scales to zero, but needs external storage to persist"]]);
+  else mod("Backend","Serverless, nothing to run","Supabase + Vercel functions cover the logic. No server to babysit until you truly need one.","core",[["A container host","only worth it once you have long jobs or heavy libraries"]]);
+  if(!pureSite) mod("Data + accounts","Supabase","Postgres database + file storage"+(auth?", logins":"")+(ai?", and vector search (pgvector) for AI":"")+(rt?", and live updates":"")+", one vendor instead of four.","core",[["Firebase","fast to start, but locks you into Google's model"],["Neon + Clerk","excellent apart, but two vendors instead of one"]]);
+  if(ai) mod("AI","Anthropic or OpenAI API","Call a hosted model for the smart features. Store embeddings in Supabase pgvector, no separate vector DB yet.","core",[["Pinecone","a dedicated vector DB, overkill until real scale"],["Self-hosted model","far more cost and ops than it's worth early"]]);
+  if(charge) mod("Payments","Stripe", chargeNow?"Take subscriptions or one-off payments. Wire it when the first paying user is real.":"Add it the day you decide to charge, nothing to set up before then.", chargeNow?"core":"later",[["Lemon Squeezy / Paddle","handle sales tax for you, nice if you sell globally and want less admin"]]);
+  if(auth||charge) mod("Email","Resend","Login links, receipts, product notices. Clean API, generous free tier.","core",[["Postmark","gold standard for deliverability, a touch pricier"],["SendGrid","powerful but heavier to set up"]]);
+  mod("See usage", cost?"Plausible":"PostHog", cost?"Simple, private, cheap page analytics.":"What people do, session replays, feature flags, free and enough for ages. Also covers basic error tracking.","core",[[cost?"PostHog":"Plausible", cost?"does far more (replays, flags), free tier generous":"privacy-first and simple, but just page stats"],["GA4","free and ubiquitous, but clunky and privacy-heavy"]]);
+  mod("Deep errors","Sentry, later","PostHog catches errors early. Add Sentry when you need full stack-trace debugging under real load.","later",[["PostHog error tracking","enough to start; upgrade when debugging gets serious"]]);
+  if(heavy&&big) mod("Job queue","Upstash Redis","So heavy jobs survive restarts and run in order once traffic is real. Add when one instance can't keep up.","later",[["A Postgres-based queue","simpler if you want zero extra vendors"]]);
+  mod("Domain + DNS","Namecheap + Cloudflare","A ~$12/yr domain, with Cloudflare in front for free speed and security.","core",[["Cloudflare Registrar","buy the domain there too, at cost, one less account"]]);
+
+  /* plan */
+  plan.push(["Sharpen the one thing","Write the single action a user takes that makes this valuable. Everything in v1 serves that one action, nothing else."]);
+  if(pureSite){
+    plan.push(["Build the site","Lay it out in <b>Framer</b> or <b>Webflow</b>; connect a domain from <b>Namecheap</b> through <b>Cloudflare</b>."]);
+    plan.push(["Capture interest","Add a form (entries emailed via <b>Resend</b>) and turn on <b>"+(cost?"Plausible":"PostHog")+"</b>."]);
+    if(charge) plan.push(["Take money simply","Add a <b>Stripe</b> payment link, no code."]);
+    plan.push(["Revisit when it grows","The moment you need accounts or real logic, come back, that's when the full stack earns its place."]);
+  }else{
+    plan.push(["Put it on GitHub", nonTech?"Start in <b>Lovable/Bolt</b> and connect it to a <b>GitHub</b> repo so the code is yours and portable.":"Create the repo, the hub everything plugs into."]);
+    plan.push(["Stand up Supabase","Turn on the database"+(auth?", logins":"")+(ai?", and pgvector for AI":"")+". Your backbone."]);
+    plan.push(["Build the core flow","With "+(nonTech?"the AI builder":"<b>Claude Code</b> on the repo")+", build only the one action from step 1. Resist the rest."]);
+    if(heavy) plan.push(["Deploy both parts","Interface on <b>"+(cost?"Cloudflare Pages":"Vercel")+"</b>, the heavy engine on <b>Render</b>. Both redeploy on every push."]);
+    else plan.push(["Deploy the frontend","Connect <b>"+(cost?"Cloudflare Pages":"Vercel")+"</b> to the repo, every push gives a live preview, then production."]);
+    var add=[]; if(chargeNow)add.push("<b>Stripe</b>"); if(auth||charge)add.push("<b>Resend</b>"); add.push("<b>"+(cost?"Plausible":"PostHog")+"</b>");
+    plan.push(["Switch on the essentials","Add "+add.join(", ")+", an afternoon each, mostly free."]);
+    plan.push(["Domain + launch","Point a <b>Namecheap</b> domain through <b>Cloudflare</b> and share it. Watch usage; talk to your first ten users."]);
+  }
+
+  /* cost */
+  if(heavy){costLow+=7;costHigh+=25;} if(big){costHigh+=25;} if(!pureSite){costHigh+=20;}
+  var costLabel=(costLow===0?"$0":"$"+costLow)+"–$"+(costHigh||15)+" / mo";
+  var costCap=heavy?"Free at zero users, except the engine host, the one line that isn't free. Scales with real usage."
+                   :"Genuinely near-free until you have real traffic. Almost every service here has a generous free tier.";
+  if(chargeNow)costCap+=" Stripe takes 2.9% + 30¢ only when money moves.";
+
+  /* tips */
+  var t=(idea||"").toLowerCase();
+  if(nonTech)tips.push(["Don't over-buy","You do not need Sentry, a queue, or a vector DB on day one. Start with the <b>Start here</b> tools only; add the rest when something actually hurts."]);
+  if(heavy)tips.push(["Your compute can't live on Vercel","The most common mistake, long jobs and libraries like OCR need a container host (Render). Budget for that one line."]);
+  if(ai)tips.push(["Keep AI a feature, not the foundation","Use a hosted model API and store results in Supabase. Don't run your own model infrastructure until the product is proven."]);
+  if(a.type==="marketplace"||/marketplace|two.?sided|buyers|sellers|vendors/.test(t))tips.push(["Marketplaces are two products","You build for buyers <b>and</b> sellers. Ship one side's value first (usually supply), or it feels empty."]);
+  if(charge)tips.push(["Charge earlier than feels comfortable","A free thing tells you nothing about demand. Stripe is a one-afternoon add, put a price on it and learn."]);
+  if(cost)tips.push(["Free tiers are real, not infinite","This stack is near-free to launch. The first real bill is the engine host (if any) and Supabase Pro when you outgrow the free limits."]);
+  if(dev)tips.push(["Make it a template","Once wired, freeze the repo as a GitHub template. Your next idea starts as a clone that already deploys."]);
+  if(tips.length<3)tips.push(["Ship the smallest real version","One core action, real users, this month. This stack is built so you add everything else later without a rewrite."]);
+
+  return {verdict:verdict,sub:sub,approach:approach,mods:mods,plan:plan,tips:tips,costLabel:costLabel,costCap:costCap,graph:G};
+}
+
+/* ---------- Live graph state from partial answers ------------------------- */
+function graphTargets(a, finalG){
+  // Returns {chosen:{stage:id}, active:{stage:bool}, decided:{stage:bool}}
+  var heavy=a.heavy, ai=a.ai, rt=a.realtime, pay=a.pay, comfort=a.comfort;
+  var out={chosen:{},active:{},decided:{}};
+  STAGES.forEach(function(s){out.active[s.key]=true;}); // default: all in play
+  if(finalG){ // final resolved recommendation
+    STAGES.forEach(function(s){
+      out.active[s.key]=finalG.active[s.key]!==false;
+      if(finalG.chosen[s.key]){out.chosen[s.key]=finalG.chosen[s.key];out.decided[s.key]=true;}
+      else{out.decided[s.key]=true;}
+    });
+    return out;
+  }
+  // partial live pruning as answers arrive
+  if(comfort){out.chosen.build = comfort==="nontech"?"lovable":(comfort==="dev"?"claudecode":"lovable");out.decided.build=true;}
+  if(heavy==="yes"){out.chosen.compute="render";out.decided.compute=true;}
+  if(heavy==="no"){out.chosen.compute="serverless";out.decided.compute=true;}
+  if(pay==="no"){out.active.pay=false;out.decided.pay=true;}
+  if(pay==="yes"||pay==="later"){out.chosen.pay="stripe";out.decided.pay=true;}
+  if(ai==="no"){out.active.ai=false;out.decided.ai=true;}
+  if(ai==="yes"){out.chosen.ai="anthropic";out.decided.ai=true;}
+  if(rt==="no"){out.active.realtime=false;out.decided.realtime=true;}
+  if(rt==="yes"){out.chosen.realtime="sbrt";out.decided.realtime=true;}
+  out.chosen.repo="github"; // known from the start
+  return out;
+}
+
+function applyTargets(tg){
+  var decidedCount=0, total=STAGES.length;
+  STAGES.forEach(function(s){if(tg.decided[s.key])decidedCount++;});
+  clarity=decidedCount/total;
+  NODES.forEach(function(n){
+    var active=tg.active[n.stage]!==false;
+    var chosen=tg.chosen[n.stage];
+    if(!active){ n.role="pruned"; n.tgt={a:0.08,s:0.5}; }
+    else if(chosen){
+      if(n.id===chosen){ n.role="chosen"; n.tgt={a:1,s:1.2}; }
+      else { n.role="pruned"; n.tgt={a:0.10,s:0.55}; }
+    } else { n.role="pending"; n.tgt={a:0.82,s:0.95}; }
+  });
+  // cross-links only survive between two still-undecided nodes, and thin as clarity rises
+  LINKS.forEach(function(l){
+    var A=NODES[l.a],B=NODES[l.b];
+    l.tgt=(A.role==="pending"&&B.role==="pending")?(1-clarity)*0.85:0;
+  });
+  animate();
+  $("#clearfill").style.width=Math.round(clarity*100)+"%";
+  return decidedCount;
+}
+
+/* ---------- Canvas rendering ---------------------------------------------- */
+var cv=$("#web"), ctx=cv.getContext("2d"), W=0,H=0,DPR=Math.min(2,window.devicePixelRatio||1),RAD=0;
+function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();}
+function resize(){
+  var r=cv.getBoundingClientRect(); W=r.width; H=r.height; DPR=Math.min(2,window.devicePixelRatio||1);
+  cv.width=W*DPR; cv.height=H*DPR; ctx.setTransform(DPR,0,0,DPR,0,0);
+  CENTER={x:W/2,y:H/2}; RAD=Math.min(W,H)*0.5 - 26;
+  NODES.forEach(function(n){ n.x=CENTER.x+Math.cos(n.ang)*n.r*RAD; n.y=CENTER.y+Math.sin(n.ang)*n.r*RAD; });
+  draw();
+}
+var raf=null, t0=performance.now();
+function animate(){ if(reduce){ NODES.forEach(function(n){n.cur.a=n.tgt.a;n.cur.s=n.tgt.s;}); LINKS.forEach(function(l){l.cur=l.tgt||0;}); draw(); return;} if(raf)return; raf=requestAnimationFrame(tick); }
+function tick(now){
+  var settled=true;
+  NODES.forEach(function(n){
+    n.cur.a+=(n.tgt.a-n.cur.a)*0.12; n.cur.s+=(n.tgt.s-n.cur.s)*0.12;
+    if(Math.abs(n.tgt.a-n.cur.a)>0.003||Math.abs(n.tgt.s-n.cur.s)>0.003)settled=false;
+  });
+  LINKS.forEach(function(l){ var tg=l.tgt||0; l.cur+=(tg-l.cur)*0.12; if(Math.abs(tg-l.cur)>0.003)settled=false; });
+  draw(now);
+  var breathing = !reduce && clarity<0.999;   // the tangle stays alive until it's fully cleared
+  if(!settled || breathing){ raf=requestAnimationFrame(tick); } else { raf=null; }
+}
+function hex(v){return css(v)||v}
+function draw(now){
+  now=now||performance.now();
+  var cx=CENTER.x, cy=CENTER.y, men=1-clarity;
+  ctx.clearRect(0,0,W,H);
+
+  // Menace: a cold red glow that traps the centre, plus a tightening cage ring, both fade as clarity rises.
+  if(men>0.02){
+    var g=ctx.createRadialGradient(cx,cy,8,cx,cy,RAD*1.1);
+    g.addColorStop(0,"rgba(120,104,92,"+(0.10*men)+")");
+    g.addColorStop(0.55,"rgba(96,86,84,"+(0.045*men)+")");
+    g.addColorStop(1,"rgba(0,0,0,0)");
+    ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+    ctx.beginPath(); ctx.arc(cx,cy,RAD*(0.40+0.05*Math.sin((now-t0)/1300)),0,6.2832);
+    ctx.strokeStyle="rgba(170,150,126,"+(0.10*men)+")"; ctx.lineWidth=1; ctx.stroke();
+  }
+
+  // The entanglement: cross-links that criss-cross the blob, dense at the start, cut as you decide.
+  LINKS.forEach(function(l){
+    if(l.cur<=0.02)return;
+    var A=NODES[l.a], B=NODES[l.b];
+    var mx=(A.x+B.x)/2, my=(A.y+B.y)/2, nx=-(B.y-A.y), ny=(B.x-A.x), len=Math.hypot(nx,ny)||1;
+    var wob=Math.sin((now-t0)/1050 + l.seed)*11*men;
+    ctx.beginPath(); ctx.moveTo(A.x,A.y); ctx.quadraticCurveTo(mx+nx/len*wob,my+ny/len*wob,B.x,B.y);
+    ctx.strokeStyle="rgba(158,146,150,"+(0.13*l.cur)+")"; ctx.lineWidth=1; ctx.stroke();
+  });
+
+  // Spokes: centre → each option.
+  NODES.forEach(function(n){
+    var a=n.cur.a; if(a<=0.02)return;
+    var mx=(cx+n.x)/2, my=(cy+n.y)/2, nx=-(n.y-cy), ny=(n.x-cx), len=Math.hypot(nx,ny)||1;
+    var amp=(n.role==="chosen"?5:12)*men, wob=Math.sin((now-t0)/900 + n.seed)*amp;
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.quadraticCurveTo(mx+nx/len*wob,my+ny/len*wob,n.x,n.y);
+    if(n.role==="chosen"){ ctx.strokeStyle="rgba(232,147,74,"+(0.62*a)+")"; ctx.lineWidth=2.4; }
+    else { ctx.strokeStyle="rgba(150,168,190,"+(0.10*a)+")"; ctx.lineWidth=1; }
+    ctx.stroke();
+  });
+
+  // Nodes, labels only on the chosen ones, so the tangle stays an ominous unknown until it clears.
+  NODES.forEach(function(n){
+    var a=n.cur.a; if(a<=0.02)return;
+    var R=(n.role==="chosen"?6.5:3.6)*n.cur.s;
+    ctx.beginPath(); ctx.arc(n.x,n.y,R,0,6.2832);
+    if(n.role==="chosen"){ ctx.fillStyle="rgba(232,147,74,"+a+")"; ctx.shadowColor="rgba(232,147,74,.65)"; ctx.shadowBlur=15; }
+    else { ctx.fillStyle="rgba(188,168,176,"+(0.5*a)+")"; ctx.shadowBlur=0; }
+    ctx.fill(); ctx.shadowBlur=0;
+    if(n.role==="chosen" && a>0.4){
+      ctx.font='600 12px "IBM Plex Mono", monospace';
+      var out=n.x>=cx?1:-1; ctx.textAlign=out>0?"left":"right"; ctx.textBaseline="middle";
+      ctx.fillStyle="rgba(255,236,214,"+a+")"; ctx.fillText(n.label, n.x+out*(R+7), n.y);
+    }
+  });
+
+  // Centre "YOU", pulses uneasily while trapped, settles when the path is lit.
+  var pulse = (men>0.3 && !reduce) ? 1+0.06*Math.sin((now-t0)/440) : 1;
+  ctx.beginPath(); ctx.arc(cx,cy,15*pulse,0,6.2832);
+  ctx.fillStyle=hex("--warm"); ctx.shadowColor="rgba(217,119,46,.7)"; ctx.shadowBlur=18; ctx.fill(); ctx.shadowBlur=0;
+  ctx.fillStyle="#fff"; ctx.font='700 10px "IBM Plex Mono", monospace'; ctx.textAlign="center"; ctx.textBaseline="middle";
+  ctx.fillText("YOU", cx, cy);
+}
+window.addEventListener("resize",resize);
+
+/* ---------- Wiring --------------------------------------------------------- */
+document.querySelectorAll(".opts[data-q]").forEach(function(group){
+  var q=group.getAttribute("data-q");
+  group.addEventListener("click",function(e){
+    var btn=e.target.closest(".opt"); if(!btn)return;
+    group.querySelectorAll(".opt").forEach(function(b){b.setAttribute("aria-pressed",b===btn?"true":"false")});
+    answers[q]=btn.getAttribute("data-v");
+    var n=REQUIRED.filter(function(k){return answers[k]}).length;
+    $("#answered").textContent=n+" / 8 answered"; $("#go").disabled=n<8;
+    applyTargets(graphTargets(answers,null));
+    updateCaption(n);
+  });
+});
+function updateCaption(n){
+  var decided=0; STAGES.forEach(function(s){}); // count via graphTargets
+  var tg=graphTargets(answers,null),d=0; STAGES.forEach(function(s){if(tg.decided[s.key])d++;});
+  if(n===0) $("#figcap").innerHTML='<b>34 options</b> across 13 decisions. Answer below, and the noise settles into one clear path.';
+  else if(n<8) $("#figcap").innerHTML='<b>'+d+' of 13</b> decisions settling. The faded ones are choices you no longer have to make.';
+  else $("#figcap").innerHTML='Ready. Press <b>Light up my path</b> to see your whole stack.';
+}
+
+/* ---------- Shareable results: encode answers to a link, decode on load ---- */
+var CODE={
+  type:{website:"w",webapp:"a",marketplace:"m",aitool:"i",content:"c",internal:"n"},
+  accounts:{yes:"y",no:"n"},
+  pay:{yes:"y",later:"l",no:"n"},
+  heavy:{yes:"y",no:"n"},
+  ai:{yes:"y",no:"n"},
+  realtime:{yes:"y",no:"n"},
+  comfort:{nontech:"n",some:"s",dev:"d"},
+  priority:{speed:"s",cost:"c",scale:"b"}
+};
+var CODE_ORDER=["type","accounts","pay","heavy","ai","realtime","comfort","priority"];
+var DECODE={};
+CODE_ORDER.forEach(function(q){DECODE[q]={};Object.keys(CODE[q]).forEach(function(v){DECODE[q][CODE[q][v]]=v;});});
+function encodeAnswers(a){return CODE_ORDER.map(function(q){return CODE[q][a[q]]||"";}).join("");}
+function decodeAnswers(code){
+  if(!code||code.length!==CODE_ORDER.length)return null;
+  var out={},ok=true;
+  CODE_ORDER.forEach(function(q,i){var v=DECODE[q][code.charAt(i)];if(!v)ok=false;else out[q]=v;});
+  return ok?out:null;
+}
+function shareURL(a,idea){
+  var u=location.origin+location.pathname+"?p="+encodeAnswers(a);
+  var it=(idea||"").trim(); if(it)u+="&i="+encodeURIComponent(it.slice(0,200));
+  return u;
+}
+function summaryText(r,url){
+  var L=["My stack, via Groundwork","","Verdict: "+r.verdict,"How to build it: "+r.approach,"","The stack:"];
+  r.mods.forEach(function(m){L.push("• "+m.role+": "+m.pick);});
+  L.push("","Cost: "+r.costLabel,"","Decide your own stack: "+url);
+  return L.join("\n");
+}
+function copyText(text,btn){
+  var old=btn.getAttribute("data-label")||btn.textContent;
+  btn.setAttribute("data-label",old);
+  function done(){btn.textContent="Copied ✓";setTimeout(function(){btn.textContent=old;},1600);}
+  function fallback(){
+    var ta=document.createElement("textarea");ta.value=text;ta.style.position="fixed";ta.style.top="-9999px";
+    document.body.appendChild(ta);ta.focus();ta.select();
+    try{document.execCommand("copy");done();}catch(e){}
+    document.body.removeChild(ta);
+  }
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(done,fallback);}
+  else fallback();
+}
+function restoreAnswersUI(){
+  CODE_ORDER.forEach(function(q){
+    var v=answers[q]; if(!v)return;
+    var g=document.querySelector('.opts[data-q="'+q+'"]');
+    if(g)g.querySelectorAll(".opt").forEach(function(b){b.setAttribute("aria-pressed",b.getAttribute("data-v")===v?"true":"false");});
+  });
+  var n=REQUIRED.filter(function(k){return answers[k]}).length;
+  $("#answered").textContent=n+" / 8 answered"; $("#go").disabled=n<8;
+}
+function initFromURL(){
+  var params=new URLSearchParams(location.search);
+  var rid=params.get("r"); if(rid){ loadShared(rid); return true; }
+  var p=params.get("p"); if(!p)return false;
+  var dec=decodeAnswers(p); if(!dec)return false;
+  Object.keys(dec).forEach(function(k){answers[k]=dec[k];});
+  var idea=params.get("i"); if(idea)$("#idea").value=idea;
+  restoreAnswersUI();
+  showResult(true);
+  return true;
+}
+
+function showResult(isShared){
+  var r=recommend(answers,$("#idea").value);
+  applyTargets(graphTargets(answers,r.graph));
+  $("#eyebrow").textContent=isShared?"A shared stack":"Your path, lit";
+  $("#headline").innerHTML=isShared
+    ? "Here's this stack. Everything faint behind it<br>is a decision they didn't have to make."
+    : "Here's your stack. Everything faint behind it<br>is a decision you didn't have to make.";
+  $("#lede").style.display="none";
+  $("#figcap").innerHTML='<b>'+Object.keys(r.graph.chosen).length+' tools chosen.</b> The rest, greyed, is what you were spared.';
+  renderResults(r,isShared);
+}
+
+$("#form").addEventListener("submit",function(e){
+  e.preventDefault();
+  if(REQUIRED.filter(function(k){return answers[k]}).length<8)return;
+  showResult(false);
+});
+
+function renderResults(r,isShared){
+  function badge(b){return b==="core"?'<span class="badge b-core">Start here</span>':b==="later"?'<span class="badge b-later">Add later</span>':b==="heads"?'<span class="badge b-heads">The one paid piece</span>':""}
+  function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+  var base=location.origin+location.pathname;
+  var shareUrl=shareURL(answers,$("#idea").value);
+  var modsHtml=r.mods.map(function(m){
+    var alts=m.alts&&m.alts.length?'<details><summary>options it beat</summary><ul class="alts">'+m.alts.map(function(x){return '<li><b>'+esc(x[0])+'</b>, '+esc(x[1])+'</li>'}).join("")+'</ul></details>':"";
+    return '<div class="mod"><span class="role">'+esc(m.role)+'</span><span class="pick">'+esc(m.pick)+'</span>'+badge(m.badge)+'<span class="why">'+m.why+'</span>'+alts+'</div>';
+  }).join("");
+  var planHtml=r.plan.map(function(s,i){return '<div class="step"><span class="n">'+(i+1)+'</span><div><b>'+s[0]+'</b><p>'+s[1]+'</p></div></div>'}).join("");
+  var tipsHtml=r.tips.map(function(t){return '<div class="tip"><span class="i">›</span><div><b>'+t[0]+'.</b> '+t[1]+'</div></div>'}).join("");
+  var bannerHtml=isShared?'<div class="sharedbanner"><span>📍 You\'re viewing a <b>shared stack</b>. Want the same honest read for your own idea?</span><button id="startmine">Build your own →</button></div>':"";
+  var mapHtml=isShared?"":
+    '<div class="sectlabel">Get the map</div>'+
+    '<div class="mapcard" id="mapcard">'+
+      '<h3>What are founders actually building?</h3>'+
+      '<p>I\'m compiling the honest map, which stacks win for which ideas, drawn from every run through Groundwork. Want it when it\'s ready, plus early access to what I\'m building next?</p>'+
+      '<form class="maprow" id="mapform" novalidate>'+
+        '<input type="email" id="mapemail" placeholder="you@email.com" aria-label="Your email" autocomplete="email">'+
+        '<button class="sharebtn" type="submit">Send me the map</button>'+
+      '</form>'+
+      '<p class="mapnote">Anonymous stack choices power the map. Your email is opt-in, never sold, and only used to send the map and updates.</p>'+
+    '</div>';
+  var shareHtml=
+    '<div class="sectlabel">Share this path</div>'+
+    '<div class="sharecard"><h3>Copy your stack</h3><p>Send someone your lit path, or paste the plan anywhere. The link opens straight to this result, no re-answering.</p>'+
+    '<div class="sharerow">'+
+      '<input class="sharelink" id="sharelink" readonly value="'+esc(shareUrl)+'" aria-label="Shareable link to this stack">'+
+      '<button class="sharebtn" id="copylink" type="button">Copy link</button>'+
+      '<button class="sharebtn ghost" id="copyshort" type="button">Copy short link</button>'+
+      '<button class="sharebtn ghost" id="copysum" type="button">Copy summary</button>'+
+    '</div></div>';
+  $("#results").innerHTML=
+    bannerHtml+
+    '<div class="verdict"><span class="eyebrow">'+(isShared?"The read":"Your read")+'</span><h2>'+r.verdict+'</h2><p>'+r.sub+'</p><div class="approach"><span>How to build it:</span> <b>'+r.approach+'</b></div></div>'+
+    '<div id="airead"></div>'+
+    '<div class="sectlabel">The stack, each pick shows the options it beat</div><div class="modules">'+modsHtml+'</div>'+
+    '<div class="sectlabel">What it costs</div><div class="costrow"><span class="big">'+r.costLabel+'</span><span class="cap">'+r.costCap+'</span></div>'+
+    '<div class="sectlabel">How to proceed</div><div class="plan">'+planHtml+'</div>'+
+    '<div class="sectlabel">Watch out for</div><div class="tips">'+tipsHtml+'</div>'+
+    '<div class="sectlabel">Spin it up, provision this stack</div><div class="spinkit" id="spinkit"></div>'+
+    mapHtml+
+    shareHtml+
+    '<div class="actions"><button class="btn primary" id="again" type="button">Start over</button><button class="btn" id="tweak" type="button">Change an answer</button></div>'+
+    '<p class="disclaimer">Opinionated starting points, not the only right answer, the value is the reasoning, so you can defend or change any pick. A later version will let you click these and provision the whole stack in one go.</p>';
+  $("#form").style.display="none";
+  $("#results").style.display="block";
+  window.scrollTo({top:0,behavior:"smooth"});
+  var link=$("#sharelink");
+  $("#copylink").onclick=function(){if(link){link.focus();link.select();}copyText(shareUrl,this);};
+  if($("#copyshort"))$("#copyshort").onclick=function(){shortLink(this);};
+  $("#copysum").onclick=function(){copyText(summaryText(r,shareUrl),this);};
+  if($("#startmine"))$("#startmine").onclick=function(){location.href=base;};
+  $("#again").onclick=function(){location.href=base;};
+  $("#tweak").onclick=function(){$("#results").style.display="none";$("#form").style.display="block";$("#lede").style.display="";$("#eyebrow").textContent="Adjust and re-run";window.scrollTo({top:$("#form").offsetTop-40,behavior:"smooth"})};
+  try{ renderSpinKit(r); }catch(e){}
+  enhanceWithAI(r);
+  var mf=$("#mapform");
+  if(mf)mf.addEventListener("submit",function(e){
+    e.preventDefault();
+    var em=$("#mapemail"), val=em?em.value.trim():"", btn=mf.querySelector("button");
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)){if(em){em.focus();em.style.borderColor="#c0392b";}return;}
+    if(!SID)SID=newSid();
+    var old=btn.textContent; btn.disabled=true; btn.textContent="Saving…";
+    fetch("/api/capture",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({sid:SID,email:val,consent:true})})
+      .then(function(res){ if(!res.ok)throw 0;
+        var c=$("#mapcard"); if(c)c.innerHTML='<h3>✓ You\'re on the list.</h3><p>I\'ll send the map when it\'s ready. Thanks for helping build it, your run is part of it now.</p>'; })
+      .catch(function(){ btn.disabled=false; btn.textContent=old; var n=document.querySelector(".mapnote"); if(n)n.textContent="Couldn't save that just now, try again in a moment."; });
+  });
+  if(!isShared){try{ captureSession(r); }catch(e){}}
+}
+
+/* ======================================================================== */
+/* Step 3 + 4, AI tailoring, spin-up kit, short links (all degrade cleanly) */
+/* ======================================================================== */
+var AI_ON=true;          // flips false once we learn the function isn't deployed
+var CAPTURE_ON=true;     // flips false if the capture function isn't deployed
+var SID=null;            // per-run session id, links the anon record to an opt-in email
+function newSid(){try{return window.crypto.randomUUID();}catch(e){return "s-"+Date.now().toString(36)+Math.random().toString(36).slice(2,10);}}
+function captureSession(r){
+  if(!CAPTURE_ON||!r||!r.mods)return;
+  SID=newSid();
+  var payload={sid:SID,answers:answers,verdict:r.verdict,approach:r.approach,
+    idea:($("#idea")?$("#idea").value.trim():""),
+    stack:r.mods.map(function(m){return {role:m.role,pick:m.pick};}),source:"web"};
+  fetch("/api/capture",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)})
+    .then(function(res){ if(res.status===404||res.status===501){CAPTURE_ON=false;var c=$("#mapcard");if(c)c.style.display="none";} })
+    .catch(function(){});
+}
+var aiFollow={};         // {aiKey: value} answers to AI follow-ups
+var aiFollowMeta=[];     // [{key,label}]
+function escHtml(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
+function escAttr(s){return escHtml(s);}
+function mdBold(s){return s.replace(/\*\*(.+?)\*\*/g,"<b>$1</b>");}
+function api(path,payload){
+  return fetch(path,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)})
+    .then(function(res){
+      if(res.status===404||res.status===501){var e=new Error("off");e.code="off";throw e;}
+      if(!res.ok){var e2=new Error("err");e2.code="err";throw e2;}
+      return res.json();
+    });
+}
+
+var ideaEl=$("#idea");
+if(ideaEl)ideaEl.addEventListener("input",function(){
+  var has=ideaEl.value.trim().length>=12;
+  var b=$("#tailorbtn"); if(b)b.hidden=!(has&&AI_ON);
+  if(!has){var n=$("#tailornote"); if(n){n.textContent="";n.className="tailornote";}}
+});
+if($("#tailorbtn"))$("#tailorbtn").addEventListener("click",function(){
+  var idea=ideaEl.value.trim(); if(idea.length<12)return;
+  var btn=this, note=$("#tailornote"), old=btn.textContent;
+  btn.disabled=true; btn.textContent="Reading…"; note.className="tailornote"; note.textContent="";
+  api("/api/tailor",{stage:"followups",idea:idea,answers:answers}).then(function(d){
+    btn.textContent="✓ Tailored"; renderFollowups(d);
+    if(d&&d.read)note.textContent=d.read;
+  }).catch(function(e){
+    btn.disabled=false; btn.textContent=old;
+    if(e.code==="off"){AI_ON=false; btn.hidden=true; note.textContent="AI tailoring isn't switched on yet, your answers still give a full recommendation."; }
+    else{note.className="tailornote err"; note.textContent="Couldn't reach the tailoring service, carry on, the recommendation still works.";}
+  });
+});
+
+function renderFollowups(d){
+  var host=$("#followups"); if(!host)return; host.innerHTML=""; aiFollow={}; aiFollowMeta=[];
+  var qs=(d&&d.questions)||[];
+  qs.slice(0,2).forEach(function(q,idx){
+    if(!q||!q.options||!q.options.length)return;
+    var key="ai"+idx; aiFollowMeta.push({key:key,label:q.q||q.label||("Follow-up "+(idx+1))});
+    var card=document.createElement("div"); card.className="qcard ai";
+    var opts=q.options.slice(0,5).map(function(o){
+      var v=(typeof o==="string")?o:(o.v||o.label||""), lab=(typeof o==="string")?o:(o.label||o.v||"");
+      return '<button type="button" class="opt" data-v="'+escAttr(v)+'">'+escHtml(lab)+'</button>';
+    }).join("");
+    card.innerHTML='<div class="qhead"><span class="qnum">✦</span><span class="qtitle">'+escHtml(q.q||q.label||"")+'<span class="aitag">AI follow-up</span></span></div>'+
+      (q.hint?'<p class="qhint">'+escHtml(q.hint)+'</p>':'')+'<div class="opts">'+opts+'</div>';
+    host.appendChild(card);
+    var grp=card.querySelector(".opts");
+    grp.addEventListener("click",function(e){var b=e.target.closest(".opt"); if(!b)return;
+      grp.querySelectorAll(".opt").forEach(function(x){x.setAttribute("aria-pressed",x===b?"true":"false");});
+      aiFollow[key]=b.getAttribute("data-v");});
+  });
+  if(host.firstChild)host.scrollIntoView({behavior:"smooth",block:"center"});
+}
+
+function enhanceWithAI(r){
+  var host=$("#airead"); if(!host)return;
+  var idea=(ideaEl?ideaEl.value.trim():""); if(!idea||!AI_ON){host.innerHTML="";return;}
+  host.innerHTML='<div class="aicard"><span class="k">reading your idea…</span></div>';
+  var follow=aiFollowMeta.map(function(m){return {q:m.label,a:aiFollow[m.key]||""};}).filter(function(x){return x.a;});
+  api("/api/tailor",{stage:"insights",idea:idea,answers:answers,followups:follow,verdict:r.verdict,stack:r.mods.map(function(m){return m.role+": "+m.pick;})}).then(function(d){
+    var ins=(d&&d.insights)||[]; if(!ins.length){host.innerHTML="";return;}
+    var lis=ins.slice(0,4).map(function(t){return "<li>"+mdBold(escHtml(t))+"</li>";}).join("");
+    host.innerHTML='<div class="aicard"><span class="k">tailored to your idea</span><h3>'+escHtml((d&&d.title)||"What your idea specifically needs")+'</h3><ul>'+lis+'</ul></div>';
+  }).catch(function(e){host.innerHTML=""; if(e.code==="off")AI_ON=false;});
+}
+
+/* ---- Spin-up kit (pure client, no backend needed) ---- */
+function needKeys(a){
+  var heavy=a.heavy==="yes", ai=a.ai==="yes", charge=(a.pay==="yes"||a.pay==="later"), auth=a.accounts==="yes", cost=a.priority==="cost";
+  var simple=(a.type==="website"||a.type==="content"), nonTech=a.comfort==="nontech";
+  var pureSite=nonTech&&simple&&!heavy&&!ai&&a.realtime!=="yes"&&!auth;
+  return {heavy:heavy,ai:ai,charge:charge,auth:auth,cost:cost,pureSite:pureSite};
+}
+function stepHtml(s,i){
+  return '<div class="sk-step"><span class="n">'+(i+1)+'</span><span class="t"><b>'+escHtml(s[0])+'</b><span>'+escHtml(s[1])+' · '+escHtml(s[2])+'</span></span><a class="sk-go" href="'+escAttr(s[3])+'" target="_blank" rel="noopener">Open '+escHtml(s[2])+' →</a></div>';
+}
+function renderSpinKit(r){
+  var host=$("#spinkit"); if(!host)return;
+  var a=answers, f=needKeys(a), steps=[], env=[];
+  if(f.pureSite){
+    steps.push(["Build the site","Design-first, no code","Framer","https://www.framer.com/"]);
+    steps.push(["Get a domain","~$12/yr","Namecheap","https://www.namecheap.com/domains/"]);
+    steps.push(["DNS + speed","Free CDN in front","Cloudflare","https://dash.cloudflare.com/"]);
+    host.innerHTML='<h3>Spin up your site</h3><p class="sk-sub">You don\'t need a code stack yet, these three get you live without provisioning anything.</p><div class="sk-steps">'+steps.map(stepHtml).join("")+'</div>';
+    return;
+  }
+  steps.push(["Create the repo","The hub everything connects to","GitHub","https://github.com/new"]);
+  steps.push(["Stand up the database","Postgres + storage"+(f.auth?" + auth":"")+(f.ai?" + pgvector":""),"Supabase","https://supabase.com/dashboard/new"]);
+  env.push(["NEXT_PUBLIC_SUPABASE_URL","your Supabase project URL"]);
+  env.push(["NEXT_PUBLIC_SUPABASE_ANON_KEY","Supabase anon / public key"]);
+  env.push(["SUPABASE_SERVICE_ROLE_KEY","server-only Supabase key, never ship to the browser"]);
+  if(f.ai){steps.push(["Get an AI key","Powers the smart features","Anthropic","https://console.anthropic.com/"]); env.push(["ANTHROPIC_API_KEY","Anthropic API key (server-only)"]);}
+  if(f.heavy){steps.push(["Deploy the engine","Long jobs / heavy libs need a container","Render","https://render.com/deploy"]); env.push(["ENGINE_URL","URL of your Render engine service"]);}
+  steps.push(["Host the frontend","Preview URL on every push","Vercel","https://vercel.com/new"]);
+  if(f.charge){steps.push(["Payments","Wire when the first paying user is real","Stripe","https://dashboard.stripe.com/register"]); env.push(["STRIPE_SECRET_KEY","Stripe secret key (server-only)"]); env.push(["STRIPE_WEBHOOK_SECRET","Stripe webhook signing secret"]);}
+  if(f.auth||f.charge){steps.push(["Email","Login links, receipts","Resend","https://resend.com/signup"]); env.push(["RESEND_API_KEY","Resend API key (server-only)"]);}
+  steps.push(["See usage",(f.cost?"Simple, private analytics":"Analytics + session replays"),(f.cost?"Plausible":"PostHog"),(f.cost?"https://plausible.io/register":"https://us.posthog.com/signup")]);
+  if(!f.cost)env.push(["NEXT_PUBLIC_POSTHOG_KEY","PostHog project key"]);
+  steps.push(["Domain + DNS","Point a domain, free CDN","Cloudflare","https://dash.cloudflare.com/"]);
+
+  var slug="my-"+String(a.type||"app").replace(/[^a-z]/g,"")+"-app";
+  var envKeys=env.map(function(e){return e[0];}).join(",");
+  var tmpl="https://github.com/vercel/next.js/tree/canary/examples/with-supabase";
+  var deploy="https://vercel.com/new/clone?repository-url="+encodeURIComponent(tmpl)+"&project-name="+encodeURIComponent(slug)+"&repository-name="+encodeURIComponent(slug)+"&env="+encodeURIComponent(envKeys)+"&envDescription="+encodeURIComponent("Keys this starter needs, fill them after the first deploy.");
+  var envText=env.map(function(e){return e[0]+"=          # "+e[1];}).join("\n");
+  var briefBtn=AI_ON?'<button class="sk-ghost" id="briefbtn" type="button">✨ Generate a build brief for Claude Code</button>':'';
+
+  host.innerHTML='<h3>Spin up your stack</h3>'+
+    '<p class="sk-sub">The ordered path to a live, wired project. Each link opens the exact place to create that piece, nothing is provisioned behind your back.</p>'+
+    '<div class="sk-steps">'+steps.map(stepHtml).join("")+'</div>'+
+    '<div class="sk-label">Environment variables this stack needs</div>'+
+    '<pre class="sk-env">'+escHtml(envText)+'</pre>'+
+    '<div class="sk-row"><a class="sk-deploy" href="'+escAttr(deploy)+'" target="_blank" rel="noopener">▲ Deploy a Next.js + Supabase starter</a>'+
+    '<button class="sk-ghost" id="copyenv" type="button">Copy .env template</button>'+briefBtn+'</div>';
+  $("#copyenv").onclick=function(){copyText(envText,this);};
+  if($("#briefbtn"))$("#briefbtn").onclick=function(){onBrief(r,this);};
+}
+
+function onBrief(r,btn){
+  var idea=(ideaEl?ideaEl.value.trim():""), old=btn.textContent;
+  btn.disabled=true; btn.textContent="Writing…";
+  api("/api/tailor",{stage:"brief",idea:idea,answers:answers,verdict:r.verdict,approach:r.approach,stack:r.mods.map(function(m){return m.role+": "+m.pick;}),plan:r.plan.map(function(p){return p[0];})}).then(function(d){
+    btn.disabled=false; btn.textContent=old;
+    openModal("Your build brief","Paste this into Claude Code (or Cursor) as the opening context for the build.",(d&&d.brief)||"(empty)");
+  }).catch(function(e){
+    btn.disabled=false; btn.textContent=old;
+    if(e.code==="off")btn.hidden=true;
+    openModal("Build brief needs the AI function","Add GEMINI_API_KEY and redeploy.","Once GEMINI_API_KEY is set in your Vercel project and you redeploy, this button writes a tailored build brief, the one core action, first tickets, and a schema sketch, ready to paste into Claude Code.");
+  });
+}
+function openModal(title,sub,body){
+  var bg=document.createElement("div"); bg.className="modalbg";
+  bg.innerHTML='<div class="modal"><div class="mhead"><h3>'+escHtml(title)+'</h3><button class="x" aria-label="Close">×</button></div><p class="msub">'+escHtml(sub)+'</p><textarea readonly></textarea><div class="sk-row"><button class="sk-ghost" id="mcopy" type="button">Copy</button></div></div>';
+  document.body.appendChild(bg);
+  var ta=bg.querySelector("textarea"); ta.value=body;
+  function close(){if(bg.parentNode)bg.parentNode.removeChild(bg);}
+  bg.addEventListener("click",function(e){if(e.target===bg)close();});
+  bg.querySelector(".x").onclick=close;
+  bg.querySelector("#mcopy").onclick=function(){ta.focus();ta.select();copyText(body,this);};
+}
+
+/* ---- Short links via Neon (falls back to the long ?p= link) ---- */
+function shortLink(btn){
+  var idea=(ideaEl?ideaEl.value.trim():"");
+  if(!btn.getAttribute("data-label"))btn.setAttribute("data-label",btn.textContent);
+  btn.textContent="Saving…";
+  api("/api/share",{answers:answers,idea:idea}).then(function(d){
+    var id=d&&d.id; if(!id)throw new Error("noid");
+    copyText(location.origin+location.pathname+"?r="+id,btn);
+  }).catch(function(){ copyText(shareURL(answers,idea),btn); });
+}
+function loadShared(id){
+  fetch("/api/share?id="+encodeURIComponent(id)).then(function(res){if(!res.ok)throw 0;return res.json();}).then(function(d){
+    var dec=d&&d.answers; if(!dec||!CODE_ORDER.every(function(k){return dec[k];}))throw 0;
+    CODE_ORDER.forEach(function(k){answers[k]=dec[k];});
+    if(d.idea&&ideaEl)ideaEl.value=d.idea;
+    restoreAnswersUI(); showResult(true);
+  }).catch(function(){ applyTargets(graphTargets(answers,null)); });
+}
+
+/* init */
+resize();
+if(!initFromURL()){ applyTargets(graphTargets(answers,null)); }
+</script>
