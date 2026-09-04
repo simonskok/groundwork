@@ -54,6 +54,19 @@ Frontend is `index.html` — vanilla JS, no build, Google Fonts only. Key struct
   the answer that makes it meaningful arrives and the pick keeps sharpening after. Gate on
   full dependencies instead and nothing moves until the last question — accurate, and it
   feels like nothing happened.
+- `TOOLS` / `COMPETES` / `altsFor()` — **the encyclopedia.** One entry per tool, split into
+  FACTS (`what`, `cost`, `lockin`, plus a `checked` date, because a stale price in a product
+  that promises an honest cost is a broken promise — re-check anything older than ~6 months)
+  and JUDGEMENT (`against`, keyed by goal: `any` is the fallback, `cost`/`scale`/`speed`/
+  `nontech`/`dev` override it). The "options it beat" lines are GENERATED from this against
+  what the founder said they want — never hand-written into a branch again. Adding a tool is
+  one entry in `TOOLS` plus its id in `COMPETES`; it then appears wherever it competes.
+  Curated, not exhaustive: 3-5 real options per stage. No public resource does layered +
+  exhaustive + goal-relative reasoning (the CNCF Landscape is the cautionary example — the
+  most complete catalogue there is, and looking at it is the exact feeling this product
+  removes). The reasoning has to be authored. That is the moat, so keep it honest.
+- Cards pass their chosen tool id to `mod()`, and a card standing for several tools passes
+  an array ("Lovable / Bolt"), or it will list itself as an option it beat.
 - `LAYERS` / `ROLE2STAGE` / `LAYER_OF` — the structural view. Cards are grouped into the
   layers every app has, each with a plain-language line on what it is and what breaks
   without it, closing on "what makes it yours". A flat list gives a first-timer nothing to

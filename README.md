@@ -107,6 +107,10 @@ Everything on the client is in `index.html`:
 - `decide(answers)` — the single source of truth for every pick. `recommend()`,
   `graphTargets()` and `renderSpinKit()` all read from it, so the cards, the canvas and the
   provisioning panel can never disagree. Add a rule here, not in three places.
+- `TOOLS` / `COMPETES` / `altsFor()` — the tool registry. Facts (what, cost, lock-in, and a
+  `checked` date) separated from judgement (`against`, keyed by the founder's goal). The
+  "options it beat" lines under each pick are generated from it, so they change with what
+  the user said they care about. Add a tool here, not in the engine.
 - `LAYERS` — results are grouped into the layers every app has ("Where it lives", "What it
   remembers", …), closing on the one layer that is actually yours.
 - `counterfactual(answers, stage)` — the "had you said X, this would be Y" line under each

@@ -494,6 +494,187 @@ function decide(a){
   return {p:p,pick:pick,active:active,needs:needs};
 }
 
+/* ---------- The tool registry: the encyclopedia ---------------------------
+   Alternatives used to be prose literals typed into each branch of
+   recommend(), which is why they never grew and never varied. Now every tool
+   is one object here, and the "options it beat" lines under each card are
+   GENERATED against the founder's actual goal.
+
+   Two kinds of field, deliberately separated:
+
+   FACTS   what / cost / lockin. Verifiable, and they go stale. In a product
+           whose promise is an honest cost, a stale price is a broken promise,
+           so every entry carries `checked` and costs are shapes, not exact
+           numbers to the cent. Re-check anything older than ~6 months.
+   JUDGEMENT `against` — why this loses to the pick, keyed by what the founder
+           said they care about. This is authored, it is the product, and no
+           dataset will hand it to you.
+
+   `against.any` is the fallback. A goal key (cost/scale/speed/nontech/dev)
+   overrides it when the founder said that. Adding a tool is one entry here;
+   it then shows up wherever its stage does. Curated, not exhaustive: 3-5 real
+   options per layer. The complete list is the disease, not the cure.        */
+var CHECKED="2026-09";
+var TOOLS={
+  /* --- how you build it --- */
+  claudecode:{name:"Claude Code",stage:"build",what:"An AI pair that edits your real repo and commits.",cost:"from $20/mo",lockin:"none",checked:CHECKED,
+    against:{any:"needs you to be comfortable with a repo and a terminal",nontech:"assumes you can read the code it writes, which is the thing you said you can't"}},
+  cursor:{name:"Cursor",stage:"build",what:"A code editor with AI built in.",cost:"free tier, $20/mo",lockin:"none",checked:CHECKED,
+    against:{any:"great once you're comfortable in code, less so before that",dev:"excellent, genuinely a coin-flip against Claude Code, pick on feel"}},
+  lovable:{name:"Lovable",stage:"build",what:"Describe an app in words, get a working one on a normal stack.",cost:"free tier, from $25/mo",lockin:"low, it exports a real repo",checked:CHECKED,
+    against:{any:"faster to a first version, but you'll outgrow the prompt box",dev:"you'd be describing in English what you could just write"}},
+  bolt:{name:"Bolt",stage:"build",what:"Same idea as Lovable: prompt in, working app out.",cost:"free tier, from $20/mo",lockin:"low",checked:CHECKED,
+    against:{any:"near-identical to Lovable, pick whichever you find friendlier"}},
+  v0:{name:"v0",stage:"build",what:"Generates polished UI from a prompt.",cost:"free tier, from $20/mo",lockin:"low",checked:CHECKED,
+    against:{any:"best-in-class for how it looks, much less for a whole working app"}},
+  github:{name:"GitHub",stage:"repo",what:"Where the code lives, and the thing every other service connects to.",cost:"free",lockin:"none",checked:CHECKED,
+    against:{any:"there isn't a real argument against it here"}},
+  gitlab:{name:"GitLab / Bitbucket",stage:"repo",what:"The same job as GitHub.",cost:"free tier",lockin:"low",checked:CHECKED,
+    against:{any:"fine, but GitHub has the widest integrations, and integrations are the point"}},
+  framer:{name:"Framer",stage:"site",what:"Design-first site builder that publishes itself.",cost:"free tier, from ~$5/mo per site",lockin:"medium, the design lives there",checked:CHECKED,
+    against:{any:"beautiful for a site, but it isn't going to run an app"}},
+  webflow:{name:"Webflow",stage:"site",what:"Visual site builder with a proper CMS.",cost:"free tier, from ~$14/mo",lockin:"medium",checked:CHECKED,
+    against:{nontech:"more capable than Framer, and a steeper first week to get there",any:"more powerful than Framer and more to learn for it"}},
+  wordpress:{name:"WordPress",stage:"site",what:"The old default for content sites.",cost:"hosting from ~$5/mo",lockin:"low",checked:CHECKED,
+    against:{any:"heavier, and it's yours to update and keep secure forever"}},
+  retool:{name:"Retool",stage:"platform",what:"Points at your database and draws the screens for you.",cost:"free tier, from $10/user/mo",lockin:"high, the UI only exists inside Retool",checked:CHECKED,
+    against:{cost:"priced per user, so it climbs every time another colleague needs in",any:"the fastest way to an internal tool, and a dead end if it ever goes public"}},
+  budibase:{name:"Budibase",stage:"platform",what:"Open-source Retool, self-hostable.",cost:"free self-hosted",lockin:"low",checked:CHECKED,
+    against:{any:"cheaper and yours, at the cost of running it yourself"}},
+  sheet:{name:"A spreadsheet",stage:"platform",what:"The tool you already have.",cost:"free",lockin:"none",checked:CHECKED,
+    against:{scale:"free, and it breaks the day two people edit the same row",any:"genuinely enough until several people need to edit at once, and be honest about whether you're there"}},
+
+  /* --- where it lives --- */
+  vercel:{name:"Vercel",stage:"front",what:"Hosts the interface, with a preview link for every change.",cost:"free tier, then $20/user/mo",lockin:"medium, some features are theirs alone",checked:CHECKED,
+    against:{any:"lovely to use, and the bill arrives sooner than Cloudflare's",cost:"priced per seat once you outgrow the free tier, which is exactly what you said you're avoiding"}},
+  netlify:{name:"Netlify",stage:"front",what:"The same job as Vercel.",cost:"free tier, then $19/user/mo",lockin:"medium",checked:CHECKED,
+    against:{cost:"the same price shape as Vercel, so switching saves you nothing",any:"same idea, smaller ecosystem, fewer people to ask when stuck"}},
+  cfpages:{name:"Cloudflare Pages",stage:"front",what:"Hosts the interface on Cloudflare's network.",cost:"generous free tier",lockin:"medium",checked:CHECKED,
+    against:{any:"cheapest by a distance, on a more limited runtime that occasionally bites",speed:"you'd save money and spend it back working around the runtime"}},
+  serverless:{name:"No server at all",stage:"compute",what:"Functions that run on demand; nothing to keep alive.",cost:"free until real traffic",lockin:"low",checked:CHECKED,
+    against:{scale:"scales beautifully and still cannot run a job that takes four minutes",any:"can't run long jobs or heavy libraries, which is exactly what you said you need"}},
+  render:{name:"Render",stage:"compute",what:"A container that stays running, deployed from your repo.",cost:"~$7-25/mo",lockin:"low, it's a Docker container",checked:CHECKED,
+    against:{nontech:"the friendliest container host there is, and still a container host to keep an eye on",any:"simple and predictable, and you pay for it while it sits idle",scale:"one flat box, so you size it yourself and it doesn't absorb a spike"}},
+  railway:{name:"Railway",stage:"compute",what:"Container hosting with unusually good developer experience.",cost:"usage-based, from ~$5/mo",lockin:"low",checked:CHECKED,
+    against:{any:"a joy to use, and usage-based bills creep in ways flat ones don't",cost:"the bill is hard to predict, which is the opposite of what you asked for"}},
+  fly:{name:"Fly.io",stage:"compute",what:"Containers run close to your users, worldwide.",cost:"usage-based, from ~$5/mo",lockin:"low",checked:CHECKED,
+    against:{nontech:"global containers configured in a file, which is more than you asked to take on",any:"more control and more global, and more setup than you need yet"}},
+  cloudrun:{name:"Cloud Run",stage:"compute",what:"Containers that scale to zero between requests.",cost:"pay-per-request, near-zero when idle",lockin:"medium, it's Google Cloud",checked:CHECKED,
+    against:{any:"scales beautifully, and brings a Google Cloud console you now have to learn",cost:"cheap at rest, but its disk doesn't persist so you'll pay for storage separately"}},
+  namecheap:{name:"Namecheap",stage:"dns",what:"Buys you a domain.",cost:"~$12/yr",lockin:"none, domains move",checked:CHECKED,
+    against:{any:"a small markup and a second account, against buying at cost from Cloudflare"}},
+  cloudflare:{name:"Cloudflare",stage:"dns",what:"Domains at cost, plus a free CDN in front of them.",cost:"domains at wholesale, CDN free",lockin:"none",checked:CHECKED,
+    against:{any:"cheapest and fewest accounts, with a console built for people who like knobs"}},
+
+  /* --- what it remembers --- */
+  supabase:{name:"Supabase",stage:"data",what:"Postgres, file storage, logins, realtime and pgvector from one vendor.",cost:"free tier, then $25/mo",lockin:"low, it's plain Postgres underneath",checked:CHECKED,
+    against:{scale:"one vendor is simpler, and at real scale you want the database and the auth to grow independently",any:"one vendor for four jobs, with auth that stops short of proper org and role modelling"}},
+  firebase:{name:"Firebase",stage:"data",what:"Google's app backend: database, auth, hosting.",cost:"free tier, then usage-based",lockin:"high, the data model is theirs",checked:CHECKED,
+    against:{scale:"scales effortlessly right until you need a query its data model can't express",cost:"usage-priced, which is cheap until one runaway loop isn't",any:"quickest of all to start, and the hardest to ever leave: the data model isn't portable"}},
+  neon:{name:"Neon + Clerk",stage:"data",what:"Serverless Postgres with branching, plus auth that does organisations and SSO.",cost:"free tiers, then ~$19 + ~$25/mo",lockin:"low",checked:CHECKED,
+    against:{cost:"two free tiers, and then two bills",any:"the best of each, at the price of two vendors instead of one",nontech:"two accounts and two dashboards, when you said you'd rather not have one"}},
+
+  /* --- what it can do --- */
+  anthropic:{name:"Anthropic",stage:"ai",what:"Hosted models via one API.",cost:"per token, cents to start",lockin:"low if you wrap the call",checked:CHECKED,
+    against:{cost:"same pricing shape as OpenAI; choose on the cheap-tier model you will actually call",any:"a coin-flip against OpenAI for most uses, which is why you wrap it and stop worrying"}},
+  openai:{name:"OpenAI",stage:"ai",what:"Hosted models via one API.",cost:"per token, cents to start",lockin:"low if you wrap the call",checked:CHECKED,
+    against:{cost:"same pricing shape as Anthropic; choose on the cheap-tier model you will actually call",any:"the widest ecosystem, and the same advice applies: wrap it so switching is a one-line change"}},
+  pinecone:{name:"Pinecone",stage:"ai",what:"A database built only for vector search.",cost:"free tier, then from ~$25/mo",lockin:"medium",checked:CHECKED,
+    against:{cost:"a second database's bill for a job the one you already pay for can do",any:"a whole extra vendor for something pgvector does inside the database you already have"}},
+  selfhost:{name:"Running your own model",stage:"ai",what:"Your own GPU, your own weights.",cost:"GPU hours, from ~$300/mo",lockin:"none, and it's all yours to run",checked:CHECKED,
+    against:{any:"far more cost and operations than it's worth before the product is proven"}},
+  sbrt:{name:"Supabase Realtime",stage:"realtime",what:"Your database broadcasts its own changes.",cost:"included",lockin:"low",checked:CHECKED,
+    against:{scale:"included and fine to a point, then you will want a service that does only this",any:"free with Supabase, but you'd be choosing your database for it"}},
+  pusher:{name:"Pusher",stage:"realtime",what:"Managed websockets you can wire up in an afternoon.",cost:"free tier, then from ~$49/mo",lockin:"low",checked:CHECKED,
+    against:{any:"a separate service to run and pay for, when your database may already do this"}},
+  ably:{name:"Ably",stage:"realtime",what:"The same job as Pusher, with stronger delivery guarantees.",cost:"free tier, then usage-based",lockin:"low",checked:CHECKED,
+    against:{any:"more robust than Pusher and more to configure for it"}},
+  upstash:{name:"Upstash Redis",stage:"queue",what:"A queue so slow work survives a restart.",cost:"free tier, pay-per-request",lockin:"low",checked:CHECKED,
+    against:{cost:"pay-per-request is cheap, and a table in the database you already have is free",any:"the right answer eventually, and one more vendor before you truly need it"}},
+  pgqueue:{name:"A Postgres queue",stage:"queue",what:"A table, a status column, and a worker.",cost:"free, you already have the database",lockin:"none",checked:CHECKED,
+    against:{scale:"free and fine for a long time, until ordering and retries under load get genuinely fiddly",any:"zero new vendors and honestly enough for a long time, until ordering and retries get fiddly"}},
+
+  /* --- how money moves --- */
+  stripe:{name:"Stripe",stage:"pay",what:"Takes card payments and subscriptions.",cost:"2.9% + 30¢ per charge",lockin:"low",checked:CHECKED,
+    against:{any:"lowest fees and the most control, and no answer for paying other people",nontech:"you own the sales-tax registrations, which is real, dull, recurring work"}},
+  lemon:{name:"Lemon Squeezy",stage:"pay",what:"Sells on your behalf, so sales tax is their problem.",cost:"5% + 50¢ per charge",lockin:"medium",checked:CHECKED,
+    against:{cost:"roughly 2% more than Stripe on every sale you ever make",any:"costs about 2% more than Stripe, and that 2% is what buys you out of tax filings"}},
+  paddle:{name:"Paddle",stage:"pay",what:"Merchant of record, aimed at software subscriptions.",cost:"~5% + 50¢",lockin:"medium",checked:CHECKED,
+    against:{any:"same trade as Lemon Squeezy, better suited to subscriptions than one-off sales"}},
+  gumroad:{name:"Gumroad",stage:"pay",what:"A page with a buy button, nothing to build.",cost:"10% flat",lockin:"high, the customer is theirs",checked:CHECKED,
+    against:{cost:"10% flat, comfortably the most expensive way to take money here",any:"the simplest thing that could work, at the cost of looking like Gumroad and the highest fee here"}},
+
+  /* --- how it reaches people --- */
+  resend:{name:"Resend",stage:"email",what:"Sends login links, receipts and notices.",cost:"free to 3k/mo, then from $20/mo",lockin:"low",checked:CHECKED,
+    against:{scale:"free and generous, and delivery record starts to matter more than price once every email is a transaction",any:"clean and generous, with a younger deliverability record than Postmark"}},
+  postmark:{name:"Postmark",stage:"email",what:"Transactional email with the best arrival record.",cost:"from ~$15/mo",lockin:"low",checked:CHECKED,
+    against:{cost:"charges from the first email, where Resend is free to three thousand",any:"the gold standard for actually arriving, and it costs from day one where Resend is free"}},
+  sendgrid:{name:"SendGrid",stage:"email",what:"High-volume email at scale.",cost:"free tier, then from ~$20/mo",lockin:"low",checked:CHECKED,
+    against:{nontech:"the most setup of the three before a single email goes out",any:"powerful, heavier to set up, and shared sending IPs can drag your delivery down"}},
+
+  /* --- how you see what's happening --- */
+  posthog:{name:"PostHog",stage:"analytics",what:"What people do, session replays, feature flags, basic error tracking.",cost:"generous free tier, then usage-based",lockin:"low",checked:CHECKED,
+    against:{cost:"free tier is genuinely generous, then usage-priced, and it climbs with your traffic",any:"does far more than page stats, and is more than a content site will ever open"}},
+  plausible:{name:"Plausible",stage:"analytics",what:"Which pages people read and where they came from, on one screen.",cost:"from ~$9/mo, free if self-hosted",lockin:"none",checked:CHECKED,
+    against:{scale:"one screen of page stats, which stops being enough the moment you need to know why people give up",any:"private and simple, and it will never tell you why someone gave up halfway"}},
+  ga:{name:"GA4",stage:"analytics",what:"Google's analytics.",cost:"free",lockin:"low",checked:CHECKED,
+    against:{nontech:"free, and clunky enough that you will stop opening it, which makes it worth nothing",any:"free and everywhere, and clunky enough that you'll stop opening it, plus a cookie banner"}},
+  sentry:{name:"Sentry",stage:"errors",what:"Full stack traces when something breaks.",cost:"free tier, then from ~$26/mo",lockin:"low",checked:CHECKED,
+    against:{cost:"another paid line for something PostHog already half does",any:"what you want when debugging gets serious, and noise before that"}},
+  pherrors:{name:"PostHog error tracking",stage:"errors",what:"Errors alongside the analytics you already have.",cost:"included",lockin:"low",checked:CHECKED,
+    against:{any:"enough to start and one less account, until you need a real stack trace"}}
+};
+
+/* Which tools compete for a stage, in the order they should be offered. */
+var COMPETES={
+  build:["claudecode","cursor","lovable","bolt","v0"],
+  repo:["github","gitlab"],
+  site:["framer","webflow","wordpress"],
+  platform:["retool","budibase","sheet"],
+  front:["vercel","netlify","cfpages"],
+  compute:["serverless","render","railway","fly","cloudrun"],
+  data:["supabase","neon","firebase"],
+  ai:["anthropic","openai","pinecone","selfhost"],
+  pay:["stripe","lemon","paddle","gumroad"],
+  email:["resend","postmark","sendgrid"],
+  analytics:["posthog","plausible","ga"],
+  errors:["sentry","pherrors"],
+  realtime:["sbrt","pusher","ably"],
+  queue:["upstash","pgqueue"],
+  dns:["namecheap","cloudflare"]
+};
+
+/* The founder's goal, in the order we'd reach for it when choosing a why-not. */
+function goalKeys(p){
+  var g=[];
+  if(p.cost)g.push("cost"); if(p.scale)g.push("scale"); if(p.speed)g.push("speed");
+  if(p.nonTech)g.push("nontech"); if(p.dev)g.push("dev");
+  return g;
+}
+function whyNot(id,p){
+  var t=TOOLS[id]; if(!t)return "";
+  var g=goalKeys(p);
+  for(var i=0;i<g.length;i++) if(t.against[g[i]]) return t.against[g[i]];
+  return t.against.any||"";
+}
+/* The generated "options it beat" for a card: everything else that competes
+   for this stage, each with a why-not written against what the founder wants.
+   `extra` lets a card add a situation-specific option the registry can't know
+   about (doing it by hand, staying in the builder, and so on). */
+function altsFor(stage,chosen,p,extra){
+  var taken=(chosen==null?[]:[].concat(chosen)).filter(Boolean);   // a card may stand for several tools
+  var out=(COMPETES[stage]||[]).filter(function(id){return taken.indexOf(id)<0;})
+    .map(function(id){return [TOOLS[id].name, whyNot(id,p)];})
+    .filter(function(x){return x[0]&&x[1];});
+  /* situation-specific extras win over the generated line for the same name */
+  (extra||[]).forEach(function(e){
+    if(!e||!e[0]||!e[1])return;
+    var at=-1; out.forEach(function(x,i){if(x[0]===e[0])at=i;});
+    if(at>=0)out[at]=e; else out.push(e);
+  });
+  return out.slice(0,4);
+}
+
 /* ---------- Layers: the structural view -----------------------------------
    A flat list of ten picks gives a first-time founder nothing to hang them on.
    Grouped into the layers every app has, the same list becomes a map, and the
@@ -643,10 +824,17 @@ function recommend(a, idea){
      parties, that is the hard part whoever you are and however you build. */
   if(p.payouts&&!p.marketplaceVerdict) sub+=" One exception to all of that: you're paying other people, and that part is genuinely hard. Don't build it yourself.";
 
-  /* ---- cards ---- */
-  function mod(role,name,why,badge,alts){
+  /* ---- cards ----
+     mod(role, displayName, why, badge, chosenToolId, extraAlts)
+     The "why" is hand-written because it speaks to this founder's situation.
+     The alternatives are GENERATED from the registry against their goal, so
+     adding a tool to TOOLS/COMPETES makes it appear everywhere it competes.
+     `extraAlts` is for the options no registry can hold: doing it by hand,
+     staying in the builder, not doing it at all.                            */
+  function mod(role,name,why,badge,chosenId,extraAlts){
     var stage=ROLE2STAGE[role]||"";
-    mods.push({role:role,pick:name,why:why,badge:badge||"",alts:(alts||[]).filter(Boolean),
+    mods.push({role:role,pick:name,why:why,badge:badge||"",
+      alts:altsFor(stage,chosenId,p,extraAlts),
       stage:stage, layer:LAYER_OF[stage]||"build", cf:counterfactual(a,stage)});
   }
 
@@ -658,49 +846,34 @@ function recommend(a, idea){
         ? (p.aitool?"Prompts, streaming and cost caps are code, not settings. You want an AI pair that edits the real repo from day one."
                    :"An AI pair that edits your real repo and commits, no copy-paste.")
         :"Prototype in a builder, then refine in Claude Code on the repo."),
-    "core",
-    [["Cursor","a code editor with AI, great once you're comfortable in code"],
-     ["v0","best for polished UI, less for full apps"],
-     p.nonTech?null:["Staying in the builder","fine until you need to do something it has no button for"]]);
+    "core", p.nonTech?["lovable","bolt"]:(pick.build==="claudecode"?"claudecode":["lovable","claudecode"]),
+    p.nonTech?null:[["Staying in the builder","fine until you need something it has no button for"]]);
 
-  mod("Code home","GitHub","Where the code lives and the one thing every service connects to. This is what ends copy-paste.","core",
-    [["GitLab / Bitbucket","fine, but GitHub has the widest integrations"]]);
+  mod("Code home","GitHub","Where the code lives and the one thing every service connects to. This is what ends copy-paste.","core","github");
 
   if(p.pureSite){
-    mod("Site","Framer or Webflow","Design-first, publishes itself, no code. Add a domain and you're live.","core",
-      [["WordPress","heavier and more to maintain for a simple site"],
-       ["A custom stack","everything below this line, which you genuinely don't need yet"]]);
-  } else if(p.internal&&p.nonTech){
-    mod("The app itself","Retool or Budibase","Points at your database and draws the screens for you. For an internal tool this is months faster than building the UI, and nobody outside will ever judge how it looks.","core",
-      [["A custom frontend","worth it only once the tool becomes the product"],
-       ["A spreadsheet","genuinely fine until several people need to edit at once"]]);
+    mod("Site","Framer or Webflow","Design-first, publishes itself, no code. Add a domain and you're live.","core",["framer","webflow"],
+      [["A custom stack","everything below this line, which you genuinely don't need yet"]]);
+  } else if(platformOnly){
+    mod("The app itself","Retool or Budibase","Points at your database and draws the screens for you. For an internal tool this is months faster than building the UI, and nobody outside will ever judge how it looks.","core",["retool","budibase"],
+      [["A custom frontend","worth it only once the tool becomes the product"]]);
   } else {
     mod("Frontend host", p.cost?"Cloudflare Pages":"Vercel",
       p.cost?"Cheapest way to host a fast frontend, with a generous free tier."
         :(p.seo?"Hosts the interface, gives every change a preview link, and renders pages ahead of time so search engines see real content."
                :"Hosts the interface and gives every change a live preview link. Free to start."),
-      "core",
-      [["Netlify","same idea as Vercel, smaller ecosystem"],
-       p.cost?["Vercel","lovely DX, but pricier than Cloudflare once you're just sitting there"]
-             :["Cloudflare Pages","cheapest, but a more limited runtime"]]);
+      "core", pick.front);
   }
 
   if(p.heavy){
     mod("Engine host", pick.compute==="cloudrun"?"Cloud Run":"Render (Docker)",
       pick.compute==="cloudrun"
-        ? "Your heavy work needs a container, and you said scale is the priority: Cloud Run scales to zero between jobs and absorbs spikes without you sizing anything. Pair it with Supabase storage, its own disk doesn't persist."
+        ? "Your heavy work needs a container, and you said scale is the priority: Cloud Run scales to zero between jobs and absorbs spikes without you sizing anything. Pair it with object storage, its own disk doesn't persist."
         : "Your files/processing need an always-on container, serverless can't run long jobs or big libraries. Push-to-deploy, one predictable line on the bill.",
-      "heads",
-      pick.compute==="cloudrun"
-        ? [["Render","a flat ~$7–25/mo box, simpler, but you pay for it while it idles"],
-           ["Fly.io","global and more control, more setup than this needs"]]
-        : [["Cloud Run","scales to zero, but needs external storage and more GCP to learn"],
-           ["Railway","great DX, usage-based bill can creep"],
-           ["Fly.io","global + more control, a bit more setup"]]);
+      "heads", pick.compute);
   } else if(!platformOnly){
     mod("Backend","Serverless, nothing to run",
-      (pick.data==="neon"?"Neon":"Supabase")+" plus a few functions cover the logic. No server to babysit until you truly need one.","core",
-      [["A container host","only worth it once you have long jobs or heavy libraries"]]);
+      (pick.data==="neon"?"Neon":"Supabase")+" plus a few functions cover the logic. No server to babysit until you truly need one.","core","serverless");
   }
 
   if(on.data){
@@ -708,20 +881,14 @@ function recommend(a, idea){
       mod("Data + accounts","Neon + Clerk",
         (p.orgs?"Your hard problem isn't storing rows, it's who is allowed to see them. Clerk does organisations, roles and SSO out of the box, which is exactly what "+(p.internal?"an internal tool":"a two-sided marketplace")+" needs and what most auth libraries make you build."
                :"Postgres with instant branching, so you can test a migration on a copy of real data, plus auth that scales past the basics.")+
-        " Two vendors, but each is the best at its job.",
-        "core",
-        [["Supabase","one vendor for database, storage and auth, but its auth stops short of proper org/role modelling"],
-         ["Firebase","fast to start, but locks you into Google's data model"]]);
+        " Two vendors, but each is the best at its job.","core","neon");
     } else {
       var extras=[];
       if(p.auth)extras.push("logins");
       if(p.aiAnywhere)extras.push("vector search (pgvector) for the AI parts");
       if(p.rt)extras.push("live updates");
       mod("Data + accounts","Supabase",
-        "Postgres database + file storage"+(extras.length?", "+extras.join(", "):"")+", one vendor instead of "+(extras.length>1?"four":"three")+".","core",
-        [["Firebase","fast to start, but locks you into Google's data model"],
-         p.orgs?["Neon + Clerk","better if org/role permissions turn out to be the hard part, at the cost of a second vendor"]
-               :["Neon + Clerk","excellent apart, but two vendors instead of one"]]);
+        "Postgres database + file storage"+(extras.length?", "+extras.join(", "):"")+", one vendor instead of "+(extras.length>1?"four":"three")+".","core","supabase");
     }
   }
 
@@ -730,33 +897,25 @@ function recommend(a, idea){
       p.aiCore
         ? "Call Anthropic or OpenAI, but never from more than one place in your code. Wrap it in a single function of yours so you can switch model, add a cost cap, log what came back, and compare versions, without touching the app."
         : "Call a hosted model for the smart features. Store embeddings in "+(pick.data==="neon"?"Neon":"Supabase")+" with pgvector, no separate vector DB yet.",
-      "core",
-      [["Pinecone","a dedicated vector DB, overkill until pgvector actually strains"],
-       ["Self-hosted model","far more cost and ops than it's worth early"],
-       p.aiCore?["Calling the API from everywhere","the version of this that you regret in three months"]:null]);
+      "core", p.aiCore?pick.ai:["anthropic","openai"],
+      p.aiCore?[["Calling the API from everywhere","the version of this you regret in three months"]]:null);
   }
 
   if(on.pay){
     if(pick.pay==="lemon"){
       mod("Payments","Lemon Squeezy or Paddle",
         "You're selling a digital product to whoever turns up, which means sales tax in dozens of countries is legally your problem. These act as merchant of record: they sell to the customer, you sell to them, and the VAT paperwork stops being yours."+(p.chargeNow?"":" Wire it the day you decide to charge."),
-        p.chargeNow?"core":"later",
-        [["Stripe","lower fees and more control, but you own the tax registrations, which is real work"],
-         ["Gumroad","simplest of all, at the cost of looking like Gumroad"]]);
+        p.chargeNow?"core":"later",["lemon","paddle"]);
     } else if(p.payouts){
       mod("Payments","Stripe Connect",
         "A marketplace doesn't take payments, it moves money between people, and that is a different product: onboarding sellers, holding funds, splitting fees, and paying out. Connect is the one thing here you should not build yourself.",
-        p.chargeNow?"core":"later",
-        [["Plain Stripe","fine for taking money, but has no answer for paying your sellers"],
-         ["Handling payouts by bank transfer","works for ten sellers, is a compliance problem at a hundred"],
-         ["Adyen / PayPal for Marketplaces","comparable, but built for companies with a finance team"]]);
+        p.chargeNow?"core":"later","stripe",
+        [["Paying sellers by bank transfer","works for ten sellers, is a compliance problem at a hundred"]]);
     } else {
       mod("Payments","Stripe",
         p.chargeNow?"Take subscriptions or one-off payments. Wire it when the first paying user is real."
                    :"Add it the day you decide to charge, nothing to set up before then.",
-        p.chargeNow?"core":"later",
-        [["Lemon Squeezy / Paddle","handle sales tax for you, worth it if you sell digital goods worldwide"],
-         ["Paddle","same idea, better for software subscriptions"]]);
+        p.chargeNow?"core":"later","stripe");
     }
   }
 
@@ -764,14 +923,10 @@ function recommend(a, idea){
     if(pick.email==="postmark"){
       mod("Email","Postmark",
         "For "+(p.marketplace?"a marketplace":"a paid product at scale")+", a receipt or a booking confirmation landing in spam is a support ticket and a refund. Postmark separates transactional mail from marketing and has the best deliverability record, which is worth the few extra dollars here.",
-        "core",
-        [["Resend","lovely API and a generous free tier, but a younger deliverability record"],
-         ["SendGrid","powerful, heavier to set up, and shared IPs can bite"]]);
+        "core","postmark");
     } else {
       mod("Email","Resend",
-        (p.auth?"Login links, ":"")+"receipts, product notices. Clean API, generous free tier.","core",
-        [["Postmark","gold standard for deliverability, worth moving to once a lost email costs you money"],
-         ["SendGrid","powerful but heavier to set up"]]);
+        (p.auth?"Login links, ":"")+"receipts, product notices. Clean API, generous free tier.","core","resend");
     }
   }
 
@@ -781,48 +936,38 @@ function recommend(a, idea){
         ? (p.content?"You mostly need to know which pages people read and where they came from. Plausible answers that on one screen, without a cookie banner."
                     :"Simple, private, cheap page analytics.")
         : "What people do, session replays, feature flags, free and enough for ages. Also covers basic error tracking.",
-      "core",
-      [pick.analytics==="plausible"
-        ? ["PostHog","does far more, replays and flags, but more than a content site needs"]
-        : ["Plausible","privacy-first and simple, but just page stats"],
-       ["GA4","free and ubiquitous, but clunky and privacy-heavy"]]);
+      "core", pick.analytics);
   } else if(p.internal){
     mod("See usage","Nothing. Go and ask them.",
-      "Product analytics exist to tell you what users you'll never meet are doing. Your users sit down the hall. A funnel chart of twelve colleagues is theatre, skip the vendor and keep the afternoon.","core",
-      [["PostHog","add it only if this tool ever goes outside the company"]]);
+      "Product analytics exist to tell you what users you'll never meet are doing. Your users sit down the hall. A funnel chart of twelve colleagues is theatre, skip the vendor and keep the afternoon.","core","",
+      [["PostHog","genuinely good, and add it only if this tool ever goes outside the company"]]);
   }
 
   mod("Deep errors","Sentry, later",
     (on.analytics&&pick.analytics==="posthog")?"PostHog catches errors early. Add Sentry when you need full stack-trace debugging under real load."
-      :"Add it when something breaks and you can't tell why from the logs. Before that it's noise you'll mute.","later",
-    [["PostHog error tracking","enough to start; upgrade when debugging gets serious"]]);
+      :"Add it when something breaks and you can't tell why from the logs. Before that it's noise you'll mute.","later","sentry");
 
   if(on.realtime){
     mod("Real-time", pick.realtime==="sbrt"?"Supabase Realtime":"Pusher or Ably",
       pick.realtime==="sbrt"
         ? "Your database already broadcasts its own changes, so live updates are a subscription, not a second system to run."
         : "Your database isn't Supabase, so live updates need their own channel. Pusher is the shortest path from nothing to a working socket.",
-      "core",
-      pick.realtime==="sbrt"
-        ? [["Pusher / Ably","a separate service to run and pay for, when Supabase already does this"]]
-        : [["Supabase Realtime","free with Supabase, but you'd be switching database for it"],
-           ["Raw WebSockets","cheap until you need reconnection, presence and scale, which is soon"]]);
+      "core", pick.realtime==="sbrt"?"sbrt":["pusher","ably"],
+      [["Raw WebSockets","cheap until you need reconnection, presence and scale, which is soon"]]);
   }
 
   if(on.queue){
     mod("Job queue","Upstash Redis",
       (p.aiCore?"Model calls are slow and sometimes fail. A queue means a request can return straight away, the work survives a restart, and a retry doesn't charge the customer twice."
                :"So heavy jobs survive restarts and run in order once traffic is real."),
-      "later",
-      [["A Postgres-based queue","simpler if you want zero extra vendors, and honestly enough for a long time"],
-       ["Doing it in the request","fine until the first timeout, which arrives with your first real user"]]);
+      "later","upstash",
+      [["Doing it in the request","fine until the first timeout, which arrives with your first real user"]]);
   }
 
   mod("Domain + DNS", p.cost?"Cloudflare Registrar":"Namecheap + Cloudflare",
     p.cost?"Buy the domain at cost from Cloudflare and get their free CDN in the same account. One account, no markup."
-          :"A ~$12/yr domain, with Cloudflare in front for free speed and security.","core",
-    [p.cost?["Namecheap","fine, but you'd pay a small markup and juggle two accounts"]
-           :["Cloudflare Registrar","buy the domain there too, at cost, one less account"]]);
+          :"A ~$12/yr domain, with Cloudflare in front for free speed and security.","core", p.cost?"cloudflare":["namecheap","cloudflare"],
+    p.cost?null:[["Cloudflare Registrar","buy the domain there too, at cost, and keep one account instead of two"]]);
 
   /* ---- plan ---- */
   plan.push(["Sharpen the one thing","Write the single action a user takes that makes this valuable. Everything in v1 serves that one action, nothing else."]);
