@@ -81,6 +81,15 @@ All five were re-indexed 2026-09-04 against `index.html` @ 2024 lines, md5 `33c3
   (`node --test test/capture.test.js`). Frontend changes have no test coverage at all.
 - **Deliver complete, runnable files, not patches.** End with something viewable.
 
+### Branching: there isn't any
+
+`main` is the only branch and the single source of truth. Commit **directly to `main`** — do
+not create a feature branch, a worktree, or a second copy of a file to "work on", and do not
+ask whether to branch. One branch, one working tree, one version of every file. This is a
+solo repo that auto-deploys, so a branch only splits attention and hides what is actually
+current. Pushing is separate: it publishes to GitHub and triggers a Vercel **production**
+deploy, so ask before `git push` unless told otherwise in the moment.
+
 ## Non-negotiables (design reasoning — don't relitigate)
 
 - **Honesty is the product.** The advisor must sometimes recommend LESS (no-code for a
