@@ -12,13 +12,18 @@ one-click way to spin the stack up.
 - `index.html` — the whole frontend: the tangle canvas, the questionnaire, the
   deterministic recommendation engine, shareable results, and the "spin up your stack"
   panel. Vanilla JS, no build step.
-- `api/tailor.js` — serverless function calling **Claude** (Anthropic) for the AI layer:
-  smart follow-up questions, an idea-specific read, and a build brief.
+- `api/tailor.js` — serverless function calling a hosted LLM for the AI layer: smart
+  follow-up questions, an idea-specific read, and a build brief. Provider-flexible —
+  **Gemini** by default, **Groq** as the alternative; set either key.
 - `api/share.js` — serverless function for **short share links**, backed by Neon Postgres.
-- `supabase/schema.sql` — the one table short links need.
-- `vercel.json`, `.env.example`, `CLAUDE.md`.
+- `api/capture.js` — serverless function that banks each completed run (anonymously) plus
+  opt-in emails, backed by the same Neon database. The data moat.
+- `db/schema.sql` — the two tables (`stacks` for short links, `sessions` for capture).
+- `db/insights.sql` — the aggregate "what founders build" queries.
+- `test/` — Node's built-in test runner, no network needed.
+- `vercel.json`, `.env.example`, `CLAUDE.md`, `HANDOFF.md`.
 
-**The AI and short-link layers are additive.** With no keys set, Groundwork runs as the
+**The AI and database layers are additive.** With no env vars set, Groundwork runs as the
 full deterministic advisor — nothing breaks. Add keys to switch the extra layers on.
 
 ## Run locally
@@ -30,6 +35,19 @@ runtime — run the whole thing with:
 npm i -g vercel
 vercel dev            # serves index.html + /api locally at http://localhost:3000
 ```
+
+## Tests
+
+```bash
+npm test
+```
+
+Run `npm install` once first (the tests import `@neondatabase/serverless`). Unit tests for
+both serverless handlers — no keys, no database, no network. They cover the degrade-cleanly
+contracts (405 on the wrong method, 501 with no key/`DATABASE_URL`, 400 on bad input) plus
+the prompt builder and JSON extraction in `api/tailor.js`. The live-API tests are skipped
+unless `RUN_LIVE=1` and a model key are set: `npm run test:live` (POSIX shells only — on
+Windows PowerShell use `$env:RUN_LIVE=1; node --test test/`).
 
 ## Deploy — the edit → push → live loop
 
@@ -43,6 +61,9 @@ and every branch gets a preview URL. Framework preset is **Other**; Vercel serve
 2. Vercel → project **groundwork** → **Settings → Environment Variables** → add
    `GEMINI_API_KEY` (Production + Preview). Optional: `TAILOR_MODEL` (default `gemini-2.5-flash`).
 3. Redeploy (Deployments → ⋯ → Redeploy, or push a commit).
+
+Prefer Groq instead? Set `GROQ_API_KEY` (default model `llama-3.3-70b-versatile`). If both
+keys are present Gemini wins; force one with `AI_PROVIDER=gemini|groq`.
 
 Now the idea box shows **"✨ Read my idea"** (follow-up questions + a tailored read on the
 results), and the spin-up panel offers **"Generate a build brief."**
@@ -81,11 +102,11 @@ Code.
 
 Everything on the client is in `index.html`:
 
-- `STAGES` — the decision registry (the tool list).
+- `STAGES` — the decision registry (the tool list): 13 decisions, 34 options.
 - `recommend(answers, idea)` — the deterministic rules engine (verdict, cards, cost, plan,
   tips). The reasoning lives here.
 - `graphTargets()` / `applyTargets()` / `draw()` — the tangle canvas.
-- share/encode helpers, `renderSpinKit()`, and the AI hooks (`enhanceWithAI`,
-  `renderFollowups`, `onBrief`) are grouped in the last script block.
+- share/encode helpers, `renderSpinKit()`, and the AI + capture hooks (`enhanceWithAI`,
+  `renderFollowups`, `onBrief`, `captureSession`) are grouped in the last script block.
 
-Server logic is in `api/tailor.js` and `api/share.js`.
+Server logic is in `api/tailor.js`, `api/share.js`, and `api/capture.js`.
