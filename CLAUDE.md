@@ -42,37 +42,40 @@ npm run test:live    # RUN_LIVE=1 + a model key; POSIX shells only (env-prefix s
   `/api/*` calls fail and the site degrades to the deterministic advisor by design.
 - **Full local run incl. `/api`:** `vercel dev` (serves at :3000). UNVERIFIED — needs the
   Vercel CLI installed; not a package.json script.
+- **Sweep the engine headlessly** after any `decide()`/`recommend()` change — see the recipe
+  in `docs/CONVENTIONS.md` (Testing). Current: 2592 combinations, mean 17.7 cards, max 24.
 - **No lint, typecheck, or build step exists.** Don't invent one.
 
 ## Where things live
 
 ```
-index.html          The entire frontend: CSS 13–290, HTML 292–369, JS 371–2024
+index.html          The entire frontend: CSS 13–274, HTML 276–353, JS 355–2024
 api/tailor.js       AI layer — Gemini default / Groq fallback. 3 stages: followups/insights/brief
 api/share.js        Short share links (?r=) — Neon-backed. GET resolves, POST creates
 api/capture.js      Anonymous session capture (the data moat) + opt-in email. Two phases
 db/schema.sql       public.stacks + public.sessions. Already applied to Neon
 db/insights.sql     The aggregate "map" queries — the sellable output
 test/               node:test suites for tailor.js and capture.js. No network, no DB
+docs/               The generated reference index (below). Re-generate after big changes
 vercel.json         cleanUrls + security headers. Zero-config routing otherwise
 ```
 
 ## Pointers
 
-Full component/deps view → **ARCHITECTURE.md**. Module graph with `file:line` →
-**MODULE_MAP.md**. Symbol lookup table → **SYMBOL_INDEX.md**. Entry points and traced flows
-→ **DATA_FLOW.md**. Patterns, testing, footguns → **CONVENTIONS.md**.
+Full component/deps view → **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**. Module graph
+with `file:line` → **[docs/MODULE_MAP.md](docs/MODULE_MAP.md)**. Symbol lookup table →
+**[docs/SYMBOL_INDEX.md](docs/SYMBOL_INDEX.md)**. Entry points and traced flows →
+**[docs/DATA_FLOW.md](docs/DATA_FLOW.md)**. Patterns, testing, footguns →
+**[docs/CONVENTIONS.md](docs/CONVENTIONS.md)**.
 
-> ⚠ Those five were indexed against `index.html` @ 1850 lines. The registry expansion
-> (8 stages, 2 layers, 28 tools) took it to 2024, so **every line number in them is stale**
-> and `openCompare`/`carryBand`/the new stages are missing from SYMBOL_INDEX. Their prose is
-> still accurate; treat the numbers as hints and `grep -n`. Re-index when convenient.
+All five were re-indexed 2026-09-04 against `index.html` @ 2024 lines, md5 `33c3da71…`
+(commit `3a1f721`), including the 8 new stages, 2 new layers and 28 new tools.
 
 ## Working agreement
 
 - Edit the smallest scope that solves the task. Don't refactor or rename unrelated code.
-- Consult SYMBOL_INDEX.md / MODULE_MAP.md to locate a target instead of grepping the tree —
-  but **re-verify the line number with `grep -n` before editing**, see pitfalls.
+- Consult `docs/SYMBOL_INDEX.md` / `docs/MODULE_MAP.md` to locate a target instead of
+  grepping the tree — but **re-verify the line number with `grep -n` before editing**.
 - State the file path and function you are changing before you edit it.
 - Don't run the full test suite unless asked; run only what covers the change
   (`node --test test/capture.test.js`). Frontend changes have no test coverage at all.
@@ -99,13 +102,25 @@ Full component/deps view → **ARCHITECTURE.md**. Module graph with `file:line` 
 
 ## Known pitfalls
 
-- **`index.html` line numbers drift constantly** — it's one ~1850-line file under active
-  edit. Indexed at 2024 lines, md5 `33c3da71…`, 2026-09-04. Always `grep -n` to confirm a
-  location before editing.
+- **`index.html` line numbers drift constantly** — one file under active edit, 2024 lines,
+  md5 `33c3da71…` as indexed. Always `grep -n` to confirm a location before editing.
 - **`needs` in `decide()` is the TRIGGER, not the full dependency set.** A stage settles on
   the canvas when the answer that makes it *meaningful* arrives, and the pick keeps
-  sharpening after. Gate on full dependencies and nothing moves until the last question —
-  accurate, and it feels like nothing happened.
+  sharpening after. Gate on full dependencies instead and nothing moves until the last
+  question — accurate, and it feels like nothing happened.
+- **Not every stage belongs on the canvas.** `STAGES` (16) drives the tangle; `COMPETES` (26)
+  is the full decision set and `decide()` makes 24 picks. The canvas only labels *chosen*
+  nodes, so more tentacles crowd it without adding feeling — the newer founder-facing
+  decisions (cms, glue, support, marketing, forms, legal, uptime, backup) are cards only,
+  exactly like `site` and `platform`.
+- **"Start here" has to mean the minimum that gets you live.** With 26 stages it is easy to
+  badge everything `core` and end up with 15 "Start here" cards, which is the upsell the
+  product exists to refuse. Results carry a `now / later` split for exactly this reason;
+  the sweep currently gives mean 12.0 "now", max 16. If the mean creeps past ~12, demote
+  something.
+- **The capture cap has zero headroom.** `cleanStack` truncates at 24 entries
+  (`api/capture.js:63`) and the verified maximum result is exactly 24 cards. The next
+  `mod()` you add silently drops data from the moat — raise the cap in the same commit.
 - **`TOOLS` entries carry a `checked` date (`CHECKED`, currently `"2026-09"`).** A stale
   price in a product that promises an honest cost is a broken promise. Re-check anything
   older than ~6 months. Costs are shapes, not exact cents.
@@ -115,20 +130,14 @@ Full component/deps view → **ARCHITECTURE.md**. Module graph with `file:line` 
   into the `build` layer and gets no counterfactual.
 - **Adding a tool = one entry in `TOOLS` + its id in `COMPETES`.** It then appears wherever
   it competes, automatically, in the compare table and the "options it beat" list.
-- **Not every stage belongs on the canvas.** `STAGES` (16) drives the tangle; `COMPETES` (26)
-  is the full decision set. The canvas only labels *chosen* nodes, so more tentacles crowd it
-  without adding feeling — the newer founder-facing decisions (cms, glue, support, marketing,
-  forms, legal, uptime, backup) are cards only, exactly like `site` and `platform`.
-- **"Start here" has to mean the minimum that gets you live.** With 26 stages it is easy to
-  badge everything `core` and end up with 15 "Start here" cards, which is the upsell the
-  product exists to refuse. The results carry a `now / later` split for exactly this reason;
-  if the median `core` count creeps much past ~12, demote something.
+- **The figure-caption counts are hardcoded and now wrong** — `index.html:305`/`:1524` still
+  say "34 options across 13 decisions" against 16 stages / 42 nodes / 24 decisions.
 - **The `api/*` handlers are CommonJS** (`module.exports = handler`) with no framework.
   They read env **at call time**, not import time, so tests can set it dynamically.
 - **`VALID` (the 8 answers whitelist) is duplicated in `api/share.js` and `api/capture.js`.**
   If you add a question or an option value, update the frontend `CODE` map AND both copies,
   or shared links and capture start rejecting valid answers with 400.
-- **Never export `sessions.email` or `sessions.idea` into anything published or sold.** The
+- **Never export `sessions.email` or `sessions.idea`** into anything published or sold. The
   aggregate is built from `answers` + `stack` only. That constraint is the brand.
 - **`db/schema.sql` is already applied to the live Neon DB.** It's the source of truth for
   re-creation, not a migration system — there are no migrations.
