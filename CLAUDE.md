@@ -46,6 +46,43 @@ npm run test:live    # RUN_LIVE=1 + a model key; POSIX shells only (env-prefix s
   in `docs/CONVENTIONS.md` (Testing). Current: 2592 combinations, mean 17.7 cards, max 24.
 - **No lint, typecheck, or build step exists.** Don't invent one.
 
+## Credentials — where they actually are
+
+**There are no credentials in this repo and there never will be.** `.env.example` is the
+only env file committed; it lists variable *names* with blank values as documentation.
+Every real value lives in **one** place:
+
+> **Vercel → the `groundwork` project → Settings → Environment Variables.**
+
+That is the single store. The functions read them at **call time** from `process.env`
+(`api/tailor.js:14`/`:15`, `api/share.js:14`, `api/capture.js:24`), server-side only — no key
+is ever sent to the browser, and nothing is bundled at build time because there is no build.
+
+| Variable | Unlocks | Where the value comes from |
+|---|---|---|
+| `DATABASE_URL` | `/api/share`, `/api/capture` (Neon) | **Set automatically** by the Vercel↔Neon integration (Vercel → Storage). You never paste it. To read it by hand: Neon Console → Connection Details |
+| `GEMINI_API_KEY` | `/api/tailor` (default provider) | https://aistudio.google.com/app/apikey — free tier, no card, starts `AIza…` |
+| `GROQ_API_KEY` | `/api/tailor` (fallback provider) | https://console.groq.com/keys — starts `gsk_…` |
+| `AI_PROVIDER` | forces `"gemini"` or `"groq"` when both keys exist | optional |
+| `TAILOR_MODEL` | model override | optional |
+
+Also accepted for the DB, in this order: `DATABASE_URL`, `POSTGRES_URL`,
+`DATABASE_URL_UNPOOLED`, `POSTGRES_URL_NON_POOLING`.
+
+**Getting them onto your machine** (only needed for `vercel dev`; opening `index.html`
+directly needs nothing):
+
+```bash
+vercel env pull .env.local    # writes the real values locally — gitignored, never commit it
+```
+
+**With none of them set the site is the full deterministic advisor.** Every `/api` route
+returns 501 and the frontend hides the feature silently. That is the designed state, not a
+broken one — so a missing key is never the cause of a broken stack recommendation.
+
+If a Neon MCP connection is attached to a session it is typically **read-only** and will not
+hand out a connection string; take `DATABASE_URL` from the Vercel or Neon dashboard instead.
+
 ## Where things live
 
 ```
