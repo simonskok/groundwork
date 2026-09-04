@@ -103,8 +103,12 @@ Code.
 Everything on the client is in `index.html`:
 
 - `STAGES` — the decision registry (the tool list): 13 decisions, 34 options.
+- `profile(answers)` — what the 8 answers actually mean, second-order dimensions included.
+- `decide(answers)` — the single source of truth for every pick. `recommend()`,
+  `graphTargets()` and `renderSpinKit()` all read from it, so the cards, the canvas and the
+  provisioning panel can never disagree. Add a rule here, not in three places.
 - `recommend(answers, idea)` — the deterministic rules engine (verdict, cards, cost, plan,
-  tips). The reasoning lives here.
+  tips). The prose reasoning lives here.
 - `graphTargets()` / `applyTargets()` / `draw()` — the tangle canvas.
 - share/encode helpers, `renderSpinKit()`, and the AI + capture hooks (`enhanceWithAI`,
   `renderFollowups`, `onBrief`, `captureSession`) are grouped in the last script block.

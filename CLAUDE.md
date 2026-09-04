@@ -42,10 +42,22 @@ See `.env.example` and README.
 Frontend is `index.html` — vanilla JS, no build, Google Fonts only. Key structures:
 
 - `STAGES` — the decision registry (the tool list / tentacles). Add/remove tools here.
-- `recommend(answers, idea)` — the deterministic rules engine: verdict, build approach,
-  stack cards (each with a badge and an "options it beat" with a one-line why-not), honest
-  monthly cost, tailored ordered plan, situation-aware tips. **The reasoning lives here** —
-  extend it to sharpen recommendations.
+- `profile(answers)` — turns the 8 thin answers into the dimensions the engine reasons
+  over, including second-order ones no question asks directly (`payouts`, `globalDigital`,
+  `aiCore`, `orgs`, `seo`, `publicFacing`).
+- `decide(answers)` — **the single source of truth.** For every stage: the pick, whether
+  the stage is in play, and the `needs` that gate it. `recommend()`, `graphTargets()` and
+  `renderSpinKit()` all read from this. Never re-implement a pick anywhere else — three
+  copies of these rules is exactly the bug that let the spin-up panel tell you to open
+  Supabase while the card above recommended Neon.
+- `needs` is the TRIGGER, not the full dependency set: a stage settles on the canvas when
+  the answer that makes it meaningful arrives and the pick keeps sharpening after. Gate on
+  full dependencies instead and nothing moves until the last question — accurate, and it
+  feels like nothing happened.
+- `recommend(answers, idea)` — the deterministic rules engine on top of `decide()`: verdict,
+  build approach, stack cards (each with a badge and an "options it beat" with a one-line
+  why-not), honest monthly cost built from the picks actually made, tailored ordered plan,
+  situation-aware tips. **The prose reasoning lives here** — extend it to sharpen advice.
 - `graphTargets()` / `applyTargets()` — map answers → node roles (pending/chosen/pruned)
   and cross-link visibility; drive the canvas.
 - `draw()` — the tangle → path rendering (menace vignette, cross-links, spokes, nodes,

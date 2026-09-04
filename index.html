@@ -358,123 +358,456 @@ function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a
   for(var i=0;i<K;i++){ LINKS.push({a:i,b:(i+7)%K,cur:0,tgt:0,seed:rnd()*6.28}); if(i%2===0) LINKS.push({a:i,b:(i+13)%K,cur:0,tgt:0,seed:rnd()*6.28}); }
 })();
 
-/* ---------- The recommendation engine ------------------------------------- */
-function recommend(a, idea){
-  var heavy=a.heavy==="yes", ai=a.ai==="yes", rt=a.realtime==="yes",
-      auth=a.accounts==="yes", charge=(a.pay==="yes"||a.pay==="later"), chargeNow=a.pay==="yes",
-      nonTech=a.comfort==="nontech", dev=a.comfort==="dev",
-      simple=(a.type==="website"||a.type==="content"), big=a.priority==="scale",
-      cost=a.priority==="cost";
-  var pureSite = nonTech && simple && !heavy && !ai && !rt && !auth;
+/* ---------- Profile: what the eight answers actually mean ------------------ */
+/* The raw answers are thin. This is where they become the dimensions the
+   engine reasons over, including the second-order ones no single question
+   asks about (money moving to third parties, VAT exposure, whether AI is the
+   product or a feature, whether anyone outside the company will ever see it). */
+function profile(a){
+  a=a||{};
+  var p={};
+  p.type        = a.type||"";
+  p.site        = p.type==="website";
+  p.content     = p.type==="content";
+  p.webapp      = p.type==="webapp";
+  p.marketplace = p.type==="marketplace";
+  p.aitool      = p.type==="aitool";
+  p.internal    = p.type==="internal";
 
-  var verdict,sub,approach,mods=[],plan=[],tips=[],costLow=0,costHigh=0;
-  if(pureSite){verdict="You don't need a custom stack yet.";sub="What you're describing is a site, not a system. A no-code builder gets you live this week, looks great, and costs almost nothing. Come back for the full stack when you add accounts, payments, or real logic.";approach="No-code builder, Framer or Webflow";}
-  else if(nonTech && !heavy){verdict="Start in an AI app builder, on standard rails.";sub="You can describe your app and have a working version fast, as long as it generates a normal, portable stack you grow into, not a locked box. The picks below are exactly what a good builder should output.";approach="AI app builder (Lovable / Bolt) → Supabase + Vercel";}
-  else if(heavy){verdict="You need a real backend. Here's the honest stack.";sub="Because your app does heavy work, it can't live on serverless alone. It needs a small always-on engine. Everything else stays managed and simple.";approach=dev?"Claude Code on a real repo":"AI builder for the app + a container host for the engine";}
-  else{verdict="A clean, standard stack fits perfectly.";sub="No heavy compute, so you stay almost entirely on managed, mostly-free services and move fast. This is the sweet spot the whole modern stack is designed for.";approach=dev?"Claude Code on a real repo":"AI app builder (Lovable / Bolt), standard rails";}
+  p.auth      = a.accounts==="yes";
+  p.chargeNow = a.pay==="yes";
+  p.charge    = a.pay==="yes"||a.pay==="later";
+  p.heavy     = a.heavy==="yes";
+  p.ai        = a.ai==="yes";
+  p.rt        = a.realtime==="yes";
+  p.nonTech   = a.comfort==="nontech";
+  p.some      = a.comfort==="some";
+  p.dev       = a.comfort==="dev";
+  p.speed     = a.priority==="speed";
+  p.cost      = a.priority==="cost";
+  p.scale     = a.priority==="scale";
 
-  /* chosen option id per stage + whether the stage is active (else spared) */
-  var G={active:{},chosen:{}};
-  function pick(stage,id,active){G.active[stage]=active!==false;if(active!==false)G.chosen[stage]=id;}
-
-  var buildId = nonTech?"lovable":(dev?"claudecode":"lovable");
-  pick("build", buildId, true);
-  pick("repo","github", true);
-  pick("front", cost?"cfpages":"vercel", !pureSite || true); // always host something
-  pick("compute", heavy?"render":"serverless", true);
-  pick("data","supabase", !pureSite);
-  pick("ai","anthropic", ai);
-  pick("pay","stripe", charge);
-  pick("email","resend", auth||charge);
-  pick("analytics", cost?"plausible":"posthog", true);
-  pick("errors","sentry", true);           // active but flagged "later"
-  pick("realtime","sbrt", rt);
-  pick("queue","upstash", heavy&&big);
-  pick("dns","cloudflare", true);
-
-  /* modules (cards) with alternatives + why-not */
-  function mod(role,pick,why,badge,alts){mods.push({role:role,pick:pick,why:why,badge:badge||"",alts:alts||[]})}
-  mod("Build with", nonTech?"Lovable / Bolt":(dev?"Claude Code":"Lovable, then Claude Code"),
-    nonTech?"Describe what you want; it writes the app on a normal stack you can export.":(dev?"An AI pair that edits your real repo and commits, no copy-paste.":"Prototype in a builder, then refine in Claude Code on the repo."),"core",
-    [["Cursor","a code editor with AI, great once you're comfortable in code"],["v0","best for polished UI, less for full apps"]]);
-  mod("Code home","GitHub","Where the code lives and the one thing every service connects to. This is what ends copy-paste.","core",[["GitLab / Bitbucket","fine, but GitHub has the widest integrations"]]);
-  if(pureSite) mod("Site","Framer or Webflow","Design-first, publishes itself, no code. Add a domain and you're live.","core",[["WordPress","heavier and more to maintain for a simple site"]]);
-  else mod("Frontend host", cost?"Cloudflare Pages":"Vercel", cost?"Cheapest way to host a fast frontend, with a generous free tier.":"Hosts the interface and gives every change a live preview link. Free to start.","core",[["Netlify","same idea as Vercel, smaller ecosystem"],[cost?"Vercel":"Cloudflare Pages", cost?"lovely DX, but pricier than Cloudflare at rest":"cheapest, but a more limited runtime"]]);
-  if(heavy) mod("Engine host","Render (Docker)","Your files/processing need an always-on container, serverless can't run long jobs or big libraries. Push-to-deploy, ~$7–25/mo.","heads",[["Railway","great DX, usage-based bill can creep"],["Fly.io","global + more control, a bit more setup"],["Cloud Run","scales to zero, but needs external storage to persist"]]);
-  else mod("Backend","Serverless, nothing to run","Supabase + Vercel functions cover the logic. No server to babysit until you truly need one.","core",[["A container host","only worth it once you have long jobs or heavy libraries"]]);
-  if(!pureSite) mod("Data + accounts","Supabase","Postgres database + file storage"+(auth?", logins":"")+(ai?", and vector search (pgvector) for AI":"")+(rt?", and live updates":"")+", one vendor instead of four.","core",[["Firebase","fast to start, but locks you into Google's model"],["Neon + Clerk","excellent apart, but two vendors instead of one"]]);
-  if(ai) mod("AI","Anthropic or OpenAI API","Call a hosted model for the smart features. Store embeddings in Supabase pgvector, no separate vector DB yet.","core",[["Pinecone","a dedicated vector DB, overkill until real scale"],["Self-hosted model","far more cost and ops than it's worth early"]]);
-  if(charge) mod("Payments","Stripe", chargeNow?"Take subscriptions or one-off payments. Wire it when the first paying user is real.":"Add it the day you decide to charge, nothing to set up before then.", chargeNow?"core":"later",[["Lemon Squeezy / Paddle","handle sales tax for you, nice if you sell globally and want less admin"]]);
-  if(auth||charge) mod("Email","Resend","Login links, receipts, product notices. Clean API, generous free tier.","core",[["Postmark","gold standard for deliverability, a touch pricier"],["SendGrid","powerful but heavier to set up"]]);
-  mod("See usage", cost?"Plausible":"PostHog", cost?"Simple, private, cheap page analytics.":"What people do, session replays, feature flags, free and enough for ages. Also covers basic error tracking.","core",[[cost?"PostHog":"Plausible", cost?"does far more (replays, flags), free tier generous":"privacy-first and simple, but just page stats"],["GA4","free and ubiquitous, but clunky and privacy-heavy"]]);
-  mod("Deep errors","Sentry, later","PostHog catches errors early. Add Sentry when you need full stack-trace debugging under real load.","later",[["PostHog error tracking","enough to start; upgrade when debugging gets serious"]]);
-  if(heavy&&big) mod("Job queue","Upstash Redis","So heavy jobs survive restarts and run in order once traffic is real. Add when one instance can't keep up.","later",[["A Postgres-based queue","simpler if you want zero extra vendors"]]);
-  mod("Domain + DNS","Namecheap + Cloudflare","A ~$12/yr domain, with Cloudflare in front for free speed and security.","core",[["Cloudflare Registrar","buy the domain there too, at cost, one less account"]]);
-
-  /* plan */
-  plan.push(["Sharpen the one thing","Write the single action a user takes that makes this valuable. Everything in v1 serves that one action, nothing else."]);
-  if(pureSite){
-    plan.push(["Build the site","Lay it out in <b>Framer</b> or <b>Webflow</b>; connect a domain from <b>Namecheap</b> through <b>Cloudflare</b>."]);
-    plan.push(["Capture interest","Add a form (entries emailed via <b>Resend</b>) and turn on <b>"+(cost?"Plausible":"PostHog")+"</b>."]);
-    if(charge) plan.push(["Take money simply","Add a <b>Stripe</b> payment link, no code."]);
-    plan.push(["Revisit when it grows","The moment you need accounts or real logic, come back, that's when the full stack earns its place."]);
-  }else{
-    plan.push(["Put it on GitHub", nonTech?"Start in <b>Lovable/Bolt</b> and connect it to a <b>GitHub</b> repo so the code is yours and portable.":"Create the repo, the hub everything plugs into."]);
-    plan.push(["Stand up Supabase","Turn on the database"+(auth?", logins":"")+(ai?", and pgvector for AI":"")+". Your backbone."]);
-    plan.push(["Build the core flow","With "+(nonTech?"the AI builder":"<b>Claude Code</b> on the repo")+", build only the one action from step 1. Resist the rest."]);
-    if(heavy) plan.push(["Deploy both parts","Interface on <b>"+(cost?"Cloudflare Pages":"Vercel")+"</b>, the heavy engine on <b>Render</b>. Both redeploy on every push."]);
-    else plan.push(["Deploy the frontend","Connect <b>"+(cost?"Cloudflare Pages":"Vercel")+"</b> to the repo, every push gives a live preview, then production."]);
-    var add=[]; if(chargeNow)add.push("<b>Stripe</b>"); if(auth||charge)add.push("<b>Resend</b>"); add.push("<b>"+(cost?"Plausible":"PostHog")+"</b>");
-    plan.push(["Switch on the essentials","Add "+add.join(", ")+", an afternoon each, mostly free."]);
-    plan.push(["Domain + launch","Point a <b>Namecheap</b> domain through <b>Cloudflare</b> and share it. Watch usage; talk to your first ten users."]);
-  }
-
-  /* cost */
-  if(heavy){costLow+=7;costHigh+=25;} if(big){costHigh+=25;} if(!pureSite){costHigh+=20;}
-  var costLabel=(costLow===0?"$0":"$"+costLow)+"–$"+(costHigh||15)+" / mo";
-  var costCap=heavy?"Free at zero users, except the engine host, the one line that isn't free. Scales with real usage."
-                   :"Genuinely near-free until you have real traffic. Almost every service here has a generous free tier.";
-  if(chargeNow)costCap+=" Stripe takes 2.9% + 30¢ only when money moves.";
-
-  /* tips */
-  var t=(idea||"").toLowerCase();
-  if(nonTech)tips.push(["Don't over-buy","You do not need Sentry, a queue, or a vector DB on day one. Start with the <b>Start here</b> tools only; add the rest when something actually hurts."]);
-  if(heavy)tips.push(["Your compute can't live on Vercel","The most common mistake, long jobs and libraries like OCR need a container host (Render). Budget for that one line."]);
-  if(ai)tips.push(["Keep AI a feature, not the foundation","Use a hosted model API and store results in Supabase. Don't run your own model infrastructure until the product is proven."]);
-  if(a.type==="marketplace"||/marketplace|two.?sided|buyers|sellers|vendors/.test(t))tips.push(["Marketplaces are two products","You build for buyers <b>and</b> sellers. Ship one side's value first (usually supply), or it feels empty."]);
-  if(charge)tips.push(["Charge earlier than feels comfortable","A free thing tells you nothing about demand. Stripe is a one-afternoon add, put a price on it and learn."]);
-  if(cost)tips.push(["Free tiers are real, not infinite","This stack is near-free to launch. The first real bill is the engine host (if any) and Supabase Pro when you outgrow the free limits."]);
-  if(dev)tips.push(["Make it a template","Once wired, freeze the repo as a GitHub template. Your next idea starts as a clone that already deploys."]);
-  if(tips.length<3)tips.push(["Ship the smallest real version","One core action, real users, this month. This stack is built so you add everything else later without a rewrite."]);
-
-  return {verdict:verdict,sub:sub,approach:approach,mods:mods,plan:plan,tips:tips,costLabel:costLabel,costCap:costCap,graph:G};
+  /* second-order: the things that actually change a recommendation */
+  p.simple        = p.site||p.content;
+  p.pureSite      = p.nonTech&&p.simple&&!p.heavy&&!p.ai&&!p.rt&&!p.auth;
+  p.payouts       = p.marketplace&&p.charge;              // money moves to third parties
+  p.globalDigital = (p.aitool||p.content)&&p.charge&&!p.marketplace; // sales tax is your problem
+  p.aiCore        = p.aitool;                             // AI is the product, not a feature
+  p.aiFeature     = p.ai&&!p.aitool;
+  p.publicFacing  = !p.internal;
+  p.seo           = p.content||p.site||p.marketplace;
+  p.orgs          = p.internal||(p.marketplace&&p.auth);  // teams/roles, not just users
+  p.needsData     = !p.pureSite;
+  p.aiAnywhere    = p.ai||p.aitool;
+  return p;
 }
 
-/* ---------- Live graph state from partial answers ------------------------- */
+/* ---------- decide(): the single source of truth --------------------------
+   For every stage: what gets picked, whether the stage is in play at all, and
+   what has to be answered before the stage means anything at all.
+
+   `needs` is the TRIGGER, not the full input set. A stage settles on the canvas
+   as soon as the answer that makes it meaningful arrives, and the pick keeps
+   sharpening as later answers land, so "data" lights up the moment you say what
+   you're building and may still swap Supabase for Neon once you say how
+   technical you are. That is the untangling doing its job: gate every stage on
+   its full dependency set instead and nothing moves until the last question,
+   which is accurate and feels like nothing happened. The canvas carries the
+   feeling; the cards carry the detail, and the cards only ever render from a
+   complete set of answers. */
+function decide(a){
+  var p=profile(a);
+  var pick={}, active={}, needs={};
+  function set(stage,id,on,dep){ pick[stage]=id; active[stage]=on!==false; needs[stage]=dep; }
+
+  set("repo","github",true,[]);
+
+  /* How they'll build it. AI tools want a real repo early because prompts,
+     streaming and cost caps are code, not clicks. */
+  set("build",
+    p.dev ? "claudecode" : (p.aitool&&!p.nonTech ? "claudecode" : "lovable"),
+    true,["comfort"]);
+
+  /* Frontend host. Cost wins on Cloudflare; everything else on Vercel. */
+  set("front", p.cost?"cfpages":"vercel", true,["priority"]);
+
+  /* Backend. Only heavy work earns a container, and then the priority picks
+     which kind: scale-to-zero for spikes, a flat small bill otherwise. */
+  set("compute",
+    !p.heavy ? "serverless" : (p.scale ? "cloudrun" : "render"),
+    true,["heavy"]);
+
+  /* Data + accounts. Supabase is the default because realtime and pgvector come
+     free with it. Neon + Clerk wins where the auth model is the hard part
+     (orgs, roles, SSO) or where you want Postgres branching and know what
+     you're doing. */
+  set("data",
+    (p.orgs&&(p.dev||p.scale)) ? "neon"
+      : (p.rt||p.aiAnywhere) ? "supabase"
+      : (p.scale&&p.dev) ? "neon"
+      : "supabase",
+    p.needsData,["type"]);
+
+  set("ai","anthropic", p.aiAnywhere,["ai","type"]);
+
+  /* Payments. Three genuinely different products hide behind one question. */
+  set("pay",
+    p.payouts ? "stripe"                       // Stripe Connect: pay other people
+      : (p.globalDigital&&!p.dev) ? "lemon"    // merchant of record: VAT is theirs
+      : "stripe",
+    p.charge,["pay"]);
+
+  /* Email. Resend unless a missed message is a lost transaction. */
+  set("email",
+    (p.marketplace||(p.chargeNow&&p.scale)) ? "postmark" : "resend",
+    p.auth||p.charge,["accounts","pay"]);
+
+  /* Analytics. An internal tool doesn't need product analytics: you can walk
+     over and ask. Saying so is the honest call. */
+  set("analytics",
+    (p.cost||p.content) ? "plausible" : "posthog",
+    p.publicFacing,["type"]);
+
+  set("errors","sentry",true,[]);
+
+  /* Real-time only rides on Supabase if Supabase is actually the database. */
+  set("realtime", pick.data==="supabase" ? "sbrt" : "pusher",
+    p.rt,["realtime"]);
+
+  /* A queue is for work that outlives a request and must survive a restart. */
+  set("queue","upstash",(p.heavy||p.aiCore)&&p.scale,["heavy","type","priority"]);
+
+  set("dns", p.cost?"cloudflare":"namecheap", true,["priority"]);
+
+  return {p:p,pick:pick,active:active,needs:needs};
+}
+
+/* ---------- The recommendation engine ------------------------------------- */
+function recommend(a, idea){
+  var d=decide(a), p=d.p, pick=d.pick, on=d.active;
+  var verdict,sub,approach,mods=[],plan=[],tips=[];
+
+  /* ---- the verdict ---- */
+  if(p.pureSite){
+    verdict="You don't need a custom stack yet.";
+    sub="What you're describing is a site, not a system. A no-code builder gets you live this week, looks great, and costs almost nothing. Come back for the full stack when you add accounts, payments, or real logic.";
+    approach="No-code builder, Framer or Webflow";
+  } else if(p.internal&&!p.heavy&&p.nonTech){
+    verdict="Build this on an internal-tools platform, not from scratch.";
+    sub="Nobody outside your company will ever see this, so polish is worth almost nothing and speed is worth everything. A tool that draws its own UI over your database will beat a custom app you have to maintain.";
+    approach="Retool or Budibase over Postgres";
+  } else if(p.nonTech&&!p.heavy){
+    verdict="Start in an AI app builder, on standard rails.";
+    sub="You can describe your app and have a working version fast, as long as it generates a normal, portable stack you grow into, not a locked box. The picks below are exactly what a good builder should output.";
+    approach="AI app builder (Lovable / Bolt) → "+(pick.data==="neon"?"Neon + Clerk":"Supabase")+" + "+(p.cost?"Cloudflare":"Vercel");
+  } else if(p.heavy){
+    verdict="You need a real backend. Here's the honest stack.";
+    sub="Because your app does heavy work, it can't live on serverless alone. It needs a small always-on engine. Everything else stays managed and simple.";
+    approach=p.dev?"Claude Code on a real repo":"AI builder for the app + a container host for the engine";
+  } else if(p.aiCore){
+    verdict="The model is the easy part. The stack around it is the product.";
+    sub="Anyone can call an API. What separates a real AI product is everything around the call, streaming, cost caps, storing what came back, and a way to tell whether the output got better or worse. That's what this stack is shaped for.";
+    approach=p.dev?"Claude Code on a real repo":"Prototype in a builder, then move the model calls into real code";
+  } else if(p.marketplace){
+    verdict="A standard stack, with one hard part: paying other people."; p.marketplaceVerdict=true;
+    sub="Technically this is an ordinary web app. The part that is genuinely difficult is money moving to third parties, and the fact that you are building two products at once. The stack below keeps everything except that boring.";
+    approach=p.dev?"Claude Code on a real repo":"AI app builder, then real code for the payout flow";
+  } else {
+    verdict="A clean, standard stack fits perfectly.";
+    sub="No heavy compute, so you stay almost entirely on managed, mostly-free services and move fast. This is the sweet spot the whole modern stack is designed for.";
+    approach=p.dev?"Claude Code on a real repo":"AI app builder (Lovable / Bolt), standard rails";
+  }
+  /* One warning outranks the verdict it landed under: if money moves to third
+     parties, that is the hard part whoever you are and however you build. */
+  if(p.payouts&&!p.marketplaceVerdict) sub+=" One exception to all of that: you're paying other people, and that part is genuinely hard. Don't build it yourself.";
+
+  /* ---- cards ---- */
+  function mod(role,name,why,badge,alts){mods.push({role:role,pick:name,why:why,badge:badge||"",alts:(alts||[]).filter(Boolean)})}
+
+  var platformOnly=p.internal&&p.nonTech;   // the verdict already said: use Retool, don't build
+  if(!platformOnly) mod("Build with",
+    p.nonTech?"Lovable / Bolt":(pick.build==="claudecode"?"Claude Code":"Lovable, then Claude Code"),
+    p.nonTech?"Describe what you want; it writes the app on a normal stack you can export."
+      :(pick.build==="claudecode"
+        ? (p.aitool?"Prompts, streaming and cost caps are code, not settings. You want an AI pair that edits the real repo from day one."
+                   :"An AI pair that edits your real repo and commits, no copy-paste.")
+        :"Prototype in a builder, then refine in Claude Code on the repo."),
+    "core",
+    [["Cursor","a code editor with AI, great once you're comfortable in code"],
+     ["v0","best for polished UI, less for full apps"],
+     p.nonTech?null:["Staying in the builder","fine until you need to do something it has no button for"]]);
+
+  mod("Code home","GitHub","Where the code lives and the one thing every service connects to. This is what ends copy-paste.","core",
+    [["GitLab / Bitbucket","fine, but GitHub has the widest integrations"]]);
+
+  if(p.pureSite){
+    mod("Site","Framer or Webflow","Design-first, publishes itself, no code. Add a domain and you're live.","core",
+      [["WordPress","heavier and more to maintain for a simple site"],
+       ["A custom stack","everything below this line, which you genuinely don't need yet"]]);
+  } else if(p.internal&&p.nonTech){
+    mod("The app itself","Retool or Budibase","Points at your database and draws the screens for you. For an internal tool this is months faster than building the UI, and nobody outside will ever judge how it looks.","core",
+      [["A custom frontend","worth it only once the tool becomes the product"],
+       ["A spreadsheet","genuinely fine until several people need to edit at once"]]);
+  } else {
+    mod("Frontend host", p.cost?"Cloudflare Pages":"Vercel",
+      p.cost?"Cheapest way to host a fast frontend, with a generous free tier."
+        :(p.seo?"Hosts the interface, gives every change a preview link, and renders pages ahead of time so search engines see real content."
+               :"Hosts the interface and gives every change a live preview link. Free to start."),
+      "core",
+      [["Netlify","same idea as Vercel, smaller ecosystem"],
+       p.cost?["Vercel","lovely DX, but pricier than Cloudflare once you're just sitting there"]
+             :["Cloudflare Pages","cheapest, but a more limited runtime"]]);
+  }
+
+  if(p.heavy){
+    mod("Engine host", pick.compute==="cloudrun"?"Cloud Run":"Render (Docker)",
+      pick.compute==="cloudrun"
+        ? "Your heavy work needs a container, and you said scale is the priority: Cloud Run scales to zero between jobs and absorbs spikes without you sizing anything. Pair it with Supabase storage, its own disk doesn't persist."
+        : "Your files/processing need an always-on container, serverless can't run long jobs or big libraries. Push-to-deploy, one predictable line on the bill.",
+      "heads",
+      pick.compute==="cloudrun"
+        ? [["Render","a flat ~$7–25/mo box, simpler, but you pay for it while it idles"],
+           ["Fly.io","global and more control, more setup than this needs"]]
+        : [["Cloud Run","scales to zero, but needs external storage and more GCP to learn"],
+           ["Railway","great DX, usage-based bill can creep"],
+           ["Fly.io","global + more control, a bit more setup"]]);
+  } else if(!platformOnly){
+    mod("Backend","Serverless, nothing to run",
+      (pick.data==="neon"?"Neon":"Supabase")+" plus a few functions cover the logic. No server to babysit until you truly need one.","core",
+      [["A container host","only worth it once you have long jobs or heavy libraries"]]);
+  }
+
+  if(on.data){
+    if(pick.data==="neon"){
+      mod("Data + accounts","Neon + Clerk",
+        (p.orgs?"Your hard problem isn't storing rows, it's who is allowed to see them. Clerk does organisations, roles and SSO out of the box, which is exactly what "+(p.internal?"an internal tool":"a two-sided marketplace")+" needs and what most auth libraries make you build."
+               :"Postgres with instant branching, so you can test a migration on a copy of real data, plus auth that scales past the basics.")+
+        " Two vendors, but each is the best at its job.",
+        "core",
+        [["Supabase","one vendor for database, storage and auth, but its auth stops short of proper org/role modelling"],
+         ["Firebase","fast to start, but locks you into Google's data model"]]);
+    } else {
+      var extras=[];
+      if(p.auth)extras.push("logins");
+      if(p.aiAnywhere)extras.push("vector search (pgvector) for the AI parts");
+      if(p.rt)extras.push("live updates");
+      mod("Data + accounts","Supabase",
+        "Postgres database + file storage"+(extras.length?", "+extras.join(", "):"")+", one vendor instead of "+(extras.length>1?"four":"three")+".","core",
+        [["Firebase","fast to start, but locks you into Google's data model"],
+         p.orgs?["Neon + Clerk","better if org/role permissions turn out to be the hard part, at the cost of a second vendor"]
+               :["Neon + Clerk","excellent apart, but two vendors instead of one"]]);
+    }
+  }
+
+  if(on.ai){
+    mod("AI", p.aiCore?"One model API, behind your own function":"Anthropic or OpenAI API",
+      p.aiCore
+        ? "Call Anthropic or OpenAI, but never from more than one place in your code. Wrap it in a single function of yours so you can switch model, add a cost cap, log what came back, and compare versions, without touching the app."
+        : "Call a hosted model for the smart features. Store embeddings in "+(pick.data==="neon"?"Neon":"Supabase")+" with pgvector, no separate vector DB yet.",
+      "core",
+      [["Pinecone","a dedicated vector DB, overkill until pgvector actually strains"],
+       ["Self-hosted model","far more cost and ops than it's worth early"],
+       p.aiCore?["Calling the API from everywhere","the version of this that you regret in three months"]:null]);
+  }
+
+  if(on.pay){
+    if(pick.pay==="lemon"){
+      mod("Payments","Lemon Squeezy or Paddle",
+        "You're selling a digital product to whoever turns up, which means sales tax in dozens of countries is legally your problem. These act as merchant of record: they sell to the customer, you sell to them, and the VAT paperwork stops being yours."+(p.chargeNow?"":" Wire it the day you decide to charge."),
+        p.chargeNow?"core":"later",
+        [["Stripe","lower fees and more control, but you own the tax registrations, which is real work"],
+         ["Gumroad","simplest of all, at the cost of looking like Gumroad"]]);
+    } else if(p.payouts){
+      mod("Payments","Stripe Connect",
+        "A marketplace doesn't take payments, it moves money between people, and that is a different product: onboarding sellers, holding funds, splitting fees, and paying out. Connect is the one thing here you should not build yourself.",
+        p.chargeNow?"core":"later",
+        [["Plain Stripe","fine for taking money, but has no answer for paying your sellers"],
+         ["Handling payouts by bank transfer","works for ten sellers, is a compliance problem at a hundred"],
+         ["Adyen / PayPal for Marketplaces","comparable, but built for companies with a finance team"]]);
+    } else {
+      mod("Payments","Stripe",
+        p.chargeNow?"Take subscriptions or one-off payments. Wire it when the first paying user is real."
+                   :"Add it the day you decide to charge, nothing to set up before then.",
+        p.chargeNow?"core":"later",
+        [["Lemon Squeezy / Paddle","handle sales tax for you, worth it if you sell digital goods worldwide"],
+         ["Paddle","same idea, better for software subscriptions"]]);
+    }
+  }
+
+  if(on.email){
+    if(pick.email==="postmark"){
+      mod("Email","Postmark",
+        "For "+(p.marketplace?"a marketplace":"a paid product at scale")+", a receipt or a booking confirmation landing in spam is a support ticket and a refund. Postmark separates transactional mail from marketing and has the best deliverability record, which is worth the few extra dollars here.",
+        "core",
+        [["Resend","lovely API and a generous free tier, but a younger deliverability record"],
+         ["SendGrid","powerful, heavier to set up, and shared IPs can bite"]]);
+    } else {
+      mod("Email","Resend",
+        (p.auth?"Login links, ":"")+"receipts, product notices. Clean API, generous free tier.","core",
+        [["Postmark","gold standard for deliverability, worth moving to once a lost email costs you money"],
+         ["SendGrid","powerful but heavier to set up"]]);
+    }
+  }
+
+  if(on.analytics){
+    mod("See usage", pick.analytics==="plausible"?"Plausible":"PostHog",
+      pick.analytics==="plausible"
+        ? (p.content?"You mostly need to know which pages people read and where they came from. Plausible answers that on one screen, without a cookie banner."
+                    :"Simple, private, cheap page analytics.")
+        : "What people do, session replays, feature flags, free and enough for ages. Also covers basic error tracking.",
+      "core",
+      [pick.analytics==="plausible"
+        ? ["PostHog","does far more, replays and flags, but more than a content site needs"]
+        : ["Plausible","privacy-first and simple, but just page stats"],
+       ["GA4","free and ubiquitous, but clunky and privacy-heavy"]]);
+  } else if(p.internal){
+    mod("See usage","Nothing. Go and ask them.",
+      "Product analytics exist to tell you what users you'll never meet are doing. Your users sit down the hall. A funnel chart of twelve colleagues is theatre, skip the vendor and keep the afternoon.","core",
+      [["PostHog","add it only if this tool ever goes outside the company"]]);
+  }
+
+  mod("Deep errors","Sentry, later",
+    (on.analytics&&pick.analytics==="posthog")?"PostHog catches errors early. Add Sentry when you need full stack-trace debugging under real load."
+      :"Add it when something breaks and you can't tell why from the logs. Before that it's noise you'll mute.","later",
+    [["PostHog error tracking","enough to start; upgrade when debugging gets serious"]]);
+
+  if(on.realtime){
+    mod("Real-time", pick.realtime==="sbrt"?"Supabase Realtime":"Pusher or Ably",
+      pick.realtime==="sbrt"
+        ? "Your database already broadcasts its own changes, so live updates are a subscription, not a second system to run."
+        : "Your database isn't Supabase, so live updates need their own channel. Pusher is the shortest path from nothing to a working socket.",
+      "core",
+      pick.realtime==="sbrt"
+        ? [["Pusher / Ably","a separate service to run and pay for, when Supabase already does this"]]
+        : [["Supabase Realtime","free with Supabase, but you'd be switching database for it"],
+           ["Raw WebSockets","cheap until you need reconnection, presence and scale, which is soon"]]);
+  }
+
+  if(on.queue){
+    mod("Job queue","Upstash Redis",
+      (p.aiCore?"Model calls are slow and sometimes fail. A queue means a request can return straight away, the work survives a restart, and a retry doesn't charge the customer twice."
+               :"So heavy jobs survive restarts and run in order once traffic is real."),
+      "later",
+      [["A Postgres-based queue","simpler if you want zero extra vendors, and honestly enough for a long time"],
+       ["Doing it in the request","fine until the first timeout, which arrives with your first real user"]]);
+  }
+
+  mod("Domain + DNS", p.cost?"Cloudflare Registrar":"Namecheap + Cloudflare",
+    p.cost?"Buy the domain at cost from Cloudflare and get their free CDN in the same account. One account, no markup."
+          :"A ~$12/yr domain, with Cloudflare in front for free speed and security.","core",
+    [p.cost?["Namecheap","fine, but you'd pay a small markup and juggle two accounts"]
+           :["Cloudflare Registrar","buy the domain there too, at cost, one less account"]]);
+
+  /* ---- plan ---- */
+  plan.push(["Sharpen the one thing","Write the single action a user takes that makes this valuable. Everything in v1 serves that one action, nothing else."]);
+  if(p.pureSite){
+    plan.push(["Build the site","Lay it out in <b>Framer</b> or <b>Webflow</b>; connect a domain from <b>"+(p.cost?"Cloudflare":"Namecheap")+"</b>."]);
+    plan.push(["Capture interest","Add a form (entries emailed via <b>Resend</b>) and turn on <b>"+(pick.analytics==="plausible"?"Plausible":"PostHog")+"</b>."]);
+    if(p.charge) plan.push(["Take money simply","Add a <b>Stripe</b> payment link, no code."]);
+    plan.push(["Revisit when it grows","The moment you need accounts or real logic, come back, that's when the full stack earns its place."]);
+  } else if(p.internal&&p.nonTech){
+    plan.push(["Get the data in one place","Stand up <b>"+(pick.data==="neon"?"Neon":"Supabase")+"</b> and move the spreadsheet into it. Everything else reads from here."]);
+    plan.push(["Draw the screens","Point <b>Retool</b> at that database and build the two screens people actually use. Hours, not weeks."]);
+    plan.push(["Lock it to your company","Turn on "+(pick.data==="neon"?"<b>Clerk</b> with SSO":"<b>Supabase</b> auth restricted to your domain")+" so only colleagues get in."]);
+    plan.push(["Hand it over","Give it to the three people who need it most and fix what they trip on. That's the whole roadmap."]);
+  } else {
+    var dataName=pick.data==="neon"?"Neon + Clerk":"Supabase";
+    plan.push(["Put it on GitHub", p.nonTech?"Start in <b>Lovable/Bolt</b> and connect it to a <b>GitHub</b> repo so the code is yours and portable.":"Create the repo, the hub everything plugs into."]);
+    plan.push(["Stand up "+dataName,"Turn on the database"+(p.auth?", logins":"")+(p.aiAnywhere?", and pgvector for AI":"")+". Your backbone."]);
+    if(p.aiCore) plan.push(["Wrap the model once","Before you build features, write the one function every model call goes through. Cost cap, logging and retries live there, and nowhere else."]);
+    plan.push(["Build the core flow","With "+(p.nonTech?"the AI builder":"<b>Claude Code</b> on the repo")+", build only the one action from step 1. Resist the rest."]);
+    if(p.payouts) plan.push(["Do payouts properly","Wire <b>Stripe Connect</b> onboarding before you have sellers, not after. Test the full loop with real money at £1, it's the flow most likely to bite you."]);
+    if(p.heavy) plan.push(["Deploy both parts","Interface on <b>"+(p.cost?"Cloudflare Pages":"Vercel")+"</b>, the heavy engine on <b>"+(pick.compute==="cloudrun"?"Cloud Run":"Render")+"</b>. Both redeploy on every push."]);
+    else plan.push(["Deploy the frontend","Connect <b>"+(p.cost?"Cloudflare Pages":"Vercel")+"</b> to the repo, every push gives a live preview, then production."]);
+    var add=[];
+    if(p.chargeNow)add.push("<b>"+(pick.pay==="lemon"?"Lemon Squeezy":(p.payouts?"Stripe Connect":"Stripe"))+"</b>");
+    if(on.email)add.push("<b>"+(pick.email==="postmark"?"Postmark":"Resend")+"</b>");
+    if(on.analytics)add.push("<b>"+(pick.analytics==="plausible"?"Plausible":"PostHog")+"</b>");
+    if(add.length)plan.push(["Switch on the essentials","Add "+add.join(", ")+", an afternoon each, mostly free."]);
+    plan.push(["Domain + launch","Point a <b>"+(p.cost?"Cloudflare":"Namecheap")+"</b> domain through <b>Cloudflare</b> and share it. Watch usage; talk to your first ten users."]);
+  }
+
+  /* ---- cost, built from the picks that were actually made ---- */
+  var lines=[], low=0, high=0;
+  function line(label,lo,hi){lines.push(label);low+=lo;high+=hi;}
+  if(p.heavy) line("engine host", pick.compute==="cloudrun"?0:7, pick.compute==="cloudrun"?20:25);
+  if(on.data&&!p.pureSite) line("database", 0, pick.data==="neon"?44:25);   // Neon Scale + Clerk Pro vs Supabase Pro
+  if(on.analytics&&pick.analytics==="plausible") line("analytics",0,9);
+  if(on.email&&pick.email==="postmark") line("email",0,15);
+  if(on.queue) line("queue",0,10);
+  if(p.aiCore) line("model usage",0,50);
+  else if(on.ai) line("model usage",0,20);
+  if(!p.pureSite&&!p.heavy&&high<15) high=15;
+  var costLabel=(low===0?"$0":"$"+low)+"–$"+(high||15)+" / mo";
+  var costCap;
+  if(p.pureSite) costCap="A builder subscription and a domain. That's the entire bill, and it's the strongest argument for starting here.";
+  else if(p.heavy&&pick.compute==="render") costCap="Free at zero users, except the engine host, the one line that isn't free. Scales with real usage.";
+  else if(p.heavy) costCap="Cloud Run bills per request, so an idle month is genuinely near-zero. The top of that range assumes real, steady traffic.";
+  else costCap="Genuinely near-free until you have real traffic. Almost every service here has a generous free tier.";
+  if(p.aiCore) costCap+=" Model usage is the line that grows with success, cap it per user from day one.";
+  if(p.chargeNow&&pick.pay!=="lemon") costCap+=" Stripe takes 2.9% + 30¢ only when money moves.";
+  if(p.chargeNow&&pick.pay==="lemon") costCap+=" Lemon Squeezy takes 5% + 50¢, more than Stripe, and that difference is what buys you out of tax filings.";
+
+  /* ---- tips ---- */
+  var t=(idea||"").toLowerCase();
+  if(p.nonTech)tips.push(["Don't over-buy","You do not need Sentry, a queue, or a vector DB on day one. Start with the <b>Start here</b> tools only; add the rest when something actually hurts."]);
+  if(p.heavy)tips.push(["Your compute can't live on Vercel","The most common mistake, long jobs and libraries like OCR need a container host. Budget for that one line."]);
+  if(p.aiCore)tips.push(["Your costs scale with your success","Every user costs you model tokens, so a free tier can bankrupt you at exactly the moment it works. Put a hard per-user cap in before launch, not after the bill."]);
+  else if(p.ai)tips.push(["Keep AI a feature, not the foundation","Use a hosted model API and store results in "+(pick.data==="neon"?"Neon":"Supabase")+". Don't run your own model infrastructure until the product is proven."]);
+  if(p.marketplace||/marketplace|two.?sided|buyers|sellers|vendors/.test(t))tips.push(["Marketplaces are two products","You build for buyers <b>and</b> sellers. Ship one side's value first (usually supply), or it feels empty."]);
+  if(p.payouts)tips.push(["Money you hold is money you're responsible for","The moment funds sit with you between buyer and seller, refunds, chargebacks and disputes are yours. Let <b>Stripe Connect</b> hold and move it, never your own bank account."]);
+  if(p.globalDigital&&pick.pay==="lemon")tips.push(["Sales tax is not optional abroad","Selling a digital product into the EU or UK creates a VAT obligation from the first sale. A merchant of record absorbs that, which is the whole reason it costs more than Stripe."]);
+  if(p.internal)tips.push(["Nobody is grading the design","Internal tools fail from being abandoned, not from being ugly. Spend the time on the data being right and on the two screens people open daily."]);
+  if(p.orgs&&!p.internal)tips.push(["Model teams before you model users","Retrofitting organisations, roles and invitations onto a single-user login is one of the genuinely painful rewrites. Decide now, even if every team has one member for a year."]);
+  if(p.charge)tips.push(["Charge earlier than feels comfortable","A free thing tells you nothing about demand. Payments are a one-afternoon add, put a price on it and learn."]);
+  if(p.cost)tips.push(["Free tiers are real, not infinite","This stack is near-free to launch. The first real bill is "+(p.heavy?"the engine host":"the database")+" when you outgrow the free limits."]);
+  if(p.seo&&!p.pureSite)tips.push(["Render pages, don't just draw them","If people find you through search, the page has to exist before the JavaScript runs. Make the public pages server-rendered from day one, it's much harder to retrofit."]);
+  if(p.dev)tips.push(["Make it a template","Once wired, freeze the repo as a GitHub template. Your next idea starts as a clone that already deploys."]);
+  /* every result carries at least three, topped up from the general pool in order */
+  var pool=[
+    ["Ship the smallest real version","One core action, real users, this month. This stack is built so you add everything else later without a rewrite."],
+    ["Decide once, then stop reading","Every pick here beat real alternatives for your answers. Re-litigating them next month costs weeks and changes nothing about whether people want this."],
+    ["Talk to ten people before you build ten features","The stack is now the easy part. Whether anyone wants the thing is still the whole risk, and no tool on this page can answer it for you."]
+  ];
+  for(var pi=0;pi<pool.length&&tips.length<3;pi++)tips.push(pool[pi]);
+  tips=tips.slice(0,6);
+
+  /* the graph shape the canvas needs */
+  var G={active:{},chosen:{}};
+  STAGES.forEach(function(s){
+    G.active[s.key]=on[s.key]!==false;
+    if(G.active[s.key]&&pick[s.key])G.chosen[s.key]=pick[s.key];
+  });
+
+  return {verdict:verdict,sub:sub,approach:approach,mods:mods,plan:plan,tips:tips,
+          costLabel:costLabel,costCap:costCap,costLines:lines,graph:G,profile:p};
+}
+
+/* ---------- Live graph state from partial answers -------------------------
+   Same rules as the final result: decide() is asked what it would pick, and a
+   stage only settles once every answer it depends on has been given. */
 function graphTargets(a, finalG){
-  // Returns {chosen:{stage:id}, active:{stage:bool}, decided:{stage:bool}}
-  var heavy=a.heavy, ai=a.ai, rt=a.realtime, pay=a.pay, comfort=a.comfort;
   var out={chosen:{},active:{},decided:{}};
-  STAGES.forEach(function(s){out.active[s.key]=true;}); // default: all in play
+  STAGES.forEach(function(s){out.active[s.key]=true;});
+
   if(finalG){ // final resolved recommendation
     STAGES.forEach(function(s){
       out.active[s.key]=finalG.active[s.key]!==false;
-      if(finalG.chosen[s.key]){out.chosen[s.key]=finalG.chosen[s.key];out.decided[s.key]=true;}
-      else{out.decided[s.key]=true;}
+      if(finalG.chosen[s.key])out.chosen[s.key]=finalG.chosen[s.key];
+      out.decided[s.key]=true;
     });
     return out;
   }
-  // partial live pruning as answers arrive
-  if(comfort){out.chosen.build = comfort==="nontech"?"lovable":(comfort==="dev"?"claudecode":"lovable");out.decided.build=true;}
-  if(heavy==="yes"){out.chosen.compute="render";out.decided.compute=true;}
-  if(heavy==="no"){out.chosen.compute="serverless";out.decided.compute=true;}
-  if(pay==="no"){out.active.pay=false;out.decided.pay=true;}
-  if(pay==="yes"||pay==="later"){out.chosen.pay="stripe";out.decided.pay=true;}
-  if(ai==="no"){out.active.ai=false;out.decided.ai=true;}
-  if(ai==="yes"){out.chosen.ai="anthropic";out.decided.ai=true;}
-  if(rt==="no"){out.active.realtime=false;out.decided.realtime=true;}
-  if(rt==="yes"){out.chosen.realtime="sbrt";out.decided.realtime=true;}
-  out.chosen.repo="github"; // known from the start
+
+  var d=decide(a);
+  STAGES.forEach(function(s){
+    var k=s.key, dep=d.needs[k]||[];
+    var ready=dep.every(function(q){return !!a[q];});
+    if(!ready)return;                       // still genuinely undecided
+    out.decided[k]=true;
+    if(d.active[k]===false){out.active[k]=false;return;}   // spared: you don't need this at all
+    if(d.pick[k])out.chosen[k]=d.pick[k];
+  });
   return out;
 }
 
@@ -507,7 +840,7 @@ function css(v){return getComputedStyle(document.documentElement).getPropertyVal
 function resize(){
   var r=cv.getBoundingClientRect(); W=r.width; H=r.height; DPR=Math.min(2,window.devicePixelRatio||1);
   cv.width=W*DPR; cv.height=H*DPR; ctx.setTransform(DPR,0,0,DPR,0,0);
-  CENTER={x:W/2,y:H/2}; RAD=Math.min(W,H)*0.5 - 26;
+  CENTER={x:W/2,y:H/2}; RAD=Math.max(1,Math.min(W,H)*0.5 - 26);   // never negative: a 0-sized canvas threw out of createRadialGradient
   NODES.forEach(function(n){ n.x=CENTER.x+Math.cos(n.ang)*n.r*RAD; n.y=CENTER.y+Math.sin(n.ang)*n.r*RAD; });
   draw();
 }
@@ -526,6 +859,7 @@ function tick(now){
 }
 function hex(v){return css(v)||v}
 function draw(now){
+  if(!(W>0&&H>0))return;          // not laid out yet, nothing to draw on
   now=now||performance.now();
   var cx=CENTER.x, cy=CENTER.y, men=1-clarity;
   ctx.clearRect(0,0,W,H);
@@ -848,53 +1182,142 @@ function enhanceWithAI(r){
   }).catch(function(e){host.innerHTML=""; if(e.code==="off")AI_ON=false;});
 }
 
-/* ---- Spin-up kit (pure client, no backend needed) ---- */
-function needKeys(a){
-  var heavy=a.heavy==="yes", ai=a.ai==="yes", charge=(a.pay==="yes"||a.pay==="later"), auth=a.accounts==="yes", cost=a.priority==="cost";
-  var simple=(a.type==="website"||a.type==="content"), nonTech=a.comfort==="nontech";
-  var pureSite=nonTech&&simple&&!heavy&&!ai&&a.realtime!=="yes"&&!auth;
-  return {heavy:heavy,ai:ai,charge:charge,auth:auth,cost:cost,pureSite:pureSite};
-}
+/* ---- Spin-up kit (pure client, no backend needed) ----
+   Reads decide() like everything else. It used to keep its own copy of the
+   picking rules, which meant the panel could tell you to open Supabase while
+   the card above it recommended Neon. One rule set, one answer. */
 function stepHtml(s,i){
   return '<div class="sk-step"><span class="n">'+(i+1)+'</span><span class="t"><b>'+escHtml(s[0])+'</b><span>'+escHtml(s[1])+' · '+escHtml(s[2])+'</span></span><a class="sk-go" href="'+escAttr(s[3])+'" target="_blank" rel="noopener">Open '+escHtml(s[2])+' →</a></div>';
 }
 function renderSpinKit(r){
   var host=$("#spinkit"); if(!host)return;
-  var a=answers, f=needKeys(a), steps=[], env=[];
-  if(f.pureSite){
+  var d=decide(answers), p=d.p, pick=d.pick, on=d.active, steps=[], env=[];
+
+  if(p.pureSite){
     steps.push(["Build the site","Design-first, no code","Framer","https://www.framer.com/"]);
     steps.push(["Get a domain","~$12/yr","Namecheap","https://www.namecheap.com/domains/"]);
     steps.push(["DNS + speed","Free CDN in front","Cloudflare","https://dash.cloudflare.com/"]);
     host.innerHTML='<h3>Spin up your site</h3><p class="sk-sub">You don\'t need a code stack yet, these three get you live without provisioning anything.</p><div class="sk-steps">'+steps.map(stepHtml).join("")+'</div>';
     return;
   }
-  steps.push(["Create the repo","The hub everything connects to","GitHub","https://github.com/new"]);
-  steps.push(["Stand up the database","Postgres + storage"+(f.auth?" + auth":"")+(f.ai?" + pgvector":""),"Supabase","https://supabase.com/dashboard/new"]);
-  env.push(["NEXT_PUBLIC_SUPABASE_URL","your Supabase project URL"]);
-  env.push(["NEXT_PUBLIC_SUPABASE_ANON_KEY","Supabase anon / public key"]);
-  env.push(["SUPABASE_SERVICE_ROLE_KEY","server-only Supabase key, never ship to the browser"]);
-  if(f.ai){steps.push(["Get an AI key","Powers the smart features","Anthropic","https://console.anthropic.com/"]); env.push(["ANTHROPIC_API_KEY","Anthropic API key (server-only)"]);}
-  if(f.heavy){steps.push(["Deploy the engine","Long jobs / heavy libs need a container","Render","https://render.com/deploy"]); env.push(["ENGINE_URL","URL of your Render engine service"]);}
-  steps.push(["Host the frontend","Preview URL on every push","Vercel","https://vercel.com/new"]);
-  if(f.charge){steps.push(["Payments","Wire when the first paying user is real","Stripe","https://dashboard.stripe.com/register"]); env.push(["STRIPE_SECRET_KEY","Stripe secret key (server-only)"]); env.push(["STRIPE_WEBHOOK_SECRET","Stripe webhook signing secret"]);}
-  if(f.auth||f.charge){steps.push(["Email","Login links, receipts","Resend","https://resend.com/signup"]); env.push(["RESEND_API_KEY","Resend API key (server-only)"]);}
-  steps.push(["See usage",(f.cost?"Simple, private analytics":"Analytics + session replays"),(f.cost?"Plausible":"PostHog"),(f.cost?"https://plausible.io/register":"https://us.posthog.com/signup")]);
-  if(!f.cost)env.push(["NEXT_PUBLIC_POSTHOG_KEY","PostHog project key"]);
-  steps.push(["Domain + DNS","Point a domain, free CDN","Cloudflare","https://dash.cloudflare.com/"]);
 
-  var slug="my-"+String(a.type||"app").replace(/[^a-z]/g,"")+"-app";
+  var platformOnly=p.internal&&p.nonTech;
+  var neon=pick.data==="neon";
+
+  steps.push(["Create the repo","The hub everything connects to","GitHub","https://github.com/new"]);
+
+  /* database + auth, matching the card above */
+  if(on.data){
+    if(neon){
+      steps.push(["Stand up the database","Serverless Postgres with branching","Neon","https://console.neon.tech/signup"]);
+      steps.push(["Add accounts","Organisations, roles and SSO","Clerk","https://dashboard.clerk.com/sign-up"]);
+      env.push(["DATABASE_URL","your Neon connection string (server-only)"]);
+      env.push(["NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY","Clerk publishable key"]);
+      env.push(["CLERK_SECRET_KEY","Clerk secret key (server-only)"]);
+    } else {
+      steps.push(["Stand up the database","Postgres + storage"+(p.auth?" + auth":"")+(p.aiAnywhere?" + pgvector":""),"Supabase","https://supabase.com/dashboard/new"]);
+      env.push(["NEXT_PUBLIC_SUPABASE_URL","your Supabase project URL"]);
+      env.push(["NEXT_PUBLIC_SUPABASE_ANON_KEY","Supabase anon / public key"]);
+      env.push(["SUPABASE_SERVICE_ROLE_KEY","server-only Supabase key, never ship to the browser"]);
+    }
+  }
+
+  if(platformOnly){
+    steps.push(["Draw the screens","Points at the database, builds the UI for you","Retool","https://login.retool.com/auth/signup"]);
+  }
+
+  if(on.ai){
+    steps.push(["Get an AI key","Powers the smart features","Anthropic","https://console.anthropic.com/"]);
+    env.push(["ANTHROPIC_API_KEY","Anthropic API key (server-only)"]);
+    if(p.aiCore)env.push(["AI_MONTHLY_CAP_USD","your own hard spend cap, enforced in the wrapper function"]);
+  }
+
+  if(p.heavy){
+    if(pick.compute==="cloudrun"){
+      steps.push(["Deploy the engine","Scales to zero between jobs","Cloud Run","https://console.cloud.google.com/run"]);
+      env.push(["ENGINE_URL","URL of your Cloud Run service"]);
+    } else {
+      steps.push(["Deploy the engine","Long jobs / heavy libs need a container","Render","https://render.com/deploy"]);
+      env.push(["ENGINE_URL","URL of your Render engine service"]);
+    }
+  }
+
+  if(!platformOnly){
+    steps.push(["Host the frontend","Preview URL on every push", p.cost?"Cloudflare Pages":"Vercel",
+      p.cost?"https://dash.cloudflare.com/?to=/:account/pages/new":"https://vercel.com/new"]);
+  }
+
+  if(on.pay){
+    if(pick.pay==="lemon"){
+      steps.push(["Payments","Merchant of record, sales tax handled","Lemon Squeezy","https://app.lemonsqueezy.com/register"]);
+      env.push(["LEMONSQUEEZY_API_KEY","Lemon Squeezy API key (server-only)"]);
+      env.push(["LEMONSQUEEZY_WEBHOOK_SECRET","webhook signing secret"]);
+    } else {
+      steps.push(["Payments", p.payouts?"Onboard sellers and pay them out":"Wire when the first paying user is real",
+        p.payouts?"Stripe Connect":"Stripe",
+        p.payouts?"https://dashboard.stripe.com/connect/overview":"https://dashboard.stripe.com/register"]);
+      env.push(["STRIPE_SECRET_KEY","Stripe secret key (server-only)"]);
+      env.push(["STRIPE_WEBHOOK_SECRET","Stripe webhook signing secret"]);
+      if(p.payouts)env.push(["STRIPE_CONNECT_CLIENT_ID","Stripe Connect client id, for seller onboarding"]);
+    }
+  }
+
+  if(on.email){
+    if(pick.email==="postmark"){
+      steps.push(["Email","Transactional mail that arrives","Postmark","https://account.postmarkapp.com/sign_up"]);
+      env.push(["POSTMARK_SERVER_TOKEN","Postmark server token (server-only)"]);
+    } else {
+      steps.push(["Email","Login links, receipts","Resend","https://resend.com/signup"]);
+      env.push(["RESEND_API_KEY","Resend API key (server-only)"]);
+    }
+  }
+
+  if(on.realtime&&pick.realtime==="pusher"){
+    steps.push(["Real-time","Live updates over websockets","Pusher","https://dashboard.pusher.com/accounts/sign_up"]);
+    env.push(["PUSHER_APP_ID","Pusher app id"]);
+    env.push(["PUSHER_SECRET","Pusher secret (server-only)"]);
+  }
+
+  if(on.queue){
+    steps.push(["Job queue","So slow work survives a restart","Upstash","https://console.upstash.com/"]);
+    env.push(["UPSTASH_REDIS_REST_URL","Upstash Redis REST URL"]);
+    env.push(["UPSTASH_REDIS_REST_TOKEN","Upstash Redis REST token (server-only)"]);
+  }
+
+  if(on.analytics){
+    if(pick.analytics==="plausible"){
+      steps.push(["See usage","Simple, private analytics","Plausible","https://plausible.io/register"]);
+      env.push(["NEXT_PUBLIC_PLAUSIBLE_DOMAIN","the domain you're measuring"]);
+    } else {
+      steps.push(["See usage","Analytics + session replays","PostHog","https://us.posthog.com/signup"]);
+      env.push(["NEXT_PUBLIC_POSTHOG_KEY","PostHog project key"]);
+    }
+  }
+
+  steps.push(["Domain + DNS","Point a domain, free CDN", p.cost?"Cloudflare":"Namecheap",
+    p.cost?"https://dash.cloudflare.com/?to=/:account/domains/register":"https://www.namecheap.com/domains/"]);
+
+  var slug="my-"+String(answers.type||"app").replace(/[^a-z]/g,"")+"-app";
   var envKeys=env.map(function(e){return e[0];}).join(",");
-  var tmpl="https://github.com/vercel/next.js/tree/canary/examples/with-supabase";
+  /* Only ever point at a starter that actually exists and is maintained. The
+     Clerk one wires auth; Neon arrives as DATABASE_URL, which is why the label
+     doesn't claim more than the template delivers. */
+  var tmpl=neon
+    ? "https://github.com/vercel/next.js/tree/canary/examples/with-clerk"
+    : "https://github.com/vercel/next.js/tree/canary/examples/with-supabase";
+  var tmplName=neon?"Next.js + Clerk":"Next.js + Supabase";
   var deploy="https://vercel.com/new/clone?repository-url="+encodeURIComponent(tmpl)+"&project-name="+encodeURIComponent(slug)+"&repository-name="+encodeURIComponent(slug)+"&env="+encodeURIComponent(envKeys)+"&envDescription="+encodeURIComponent("Keys this starter needs, fill them after the first deploy.");
   var envText=env.map(function(e){return e[0]+"=          # "+e[1];}).join("\n");
   var briefBtn=AI_ON?'<button class="sk-ghost" id="briefbtn" type="button">✨ Generate a build brief for Claude Code</button>':'';
+  var deployBtn=platformOnly?'':'<a class="sk-deploy" href="'+escAttr(deploy)+'" target="_blank" rel="noopener">▲ Deploy a '+escHtml(tmplName)+' starter</a>';
 
   host.innerHTML='<h3>Spin up your stack</h3>'+
-    '<p class="sk-sub">The ordered path to a live, wired project. Each link opens the exact place to create that piece, nothing is provisioned behind your back.</p>'+
+    '<p class="sk-sub">The ordered path to a live, wired project, in the order that works. Each link opens the exact place to create that piece, nothing is provisioned behind your back.</p>'+
     '<div class="sk-steps">'+steps.map(stepHtml).join("")+'</div>'+
     '<div class="sk-label">Environment variables this stack needs</div>'+
-    '<pre class="sk-env">'+escHtml(envText)+'</pre>'+
-    '<div class="sk-row"><a class="sk-deploy" href="'+escAttr(deploy)+'" target="_blank" rel="noopener">▲ Deploy a Next.js + Supabase starter</a>'+
+    '<pre class="sk-env">'+escHtml(envText||"# nothing to configure yet")+'</pre>'+
+    (neon&&!platformOnly?'<p class="sk-sub" style="margin-top:10px">The starter wires Clerk; paste your Neon <code>DATABASE_URL</code> in after the first deploy.</p>':'')+
+    '<div class="sk-row">'+deployBtn+
     '<button class="sk-ghost" id="copyenv" type="button">Copy .env template</button>'+briefBtn+'</div>';
   $("#copyenv").onclick=function(){copyText(envText,this);};
   if($("#briefbtn"))$("#briefbtn").onclick=function(){onBrief(r,this);};
