@@ -102,7 +102,13 @@ Code.
 
 Everything on the client is in `index.html`:
 
-- `STAGES` — the decision registry (the tool list): 13 decisions, 34 options.
+- `STAGES` — the decision registry (the tool list): 16 decisions on the canvas, 18 in the
+  engine, 55 tools.
+- `carryBand()` / `heavyPicks()` — complexity coherence. Every tool has a `weight` 1-5; the
+  answers imply a band the founder can carry, and anything heavier is named rather than
+  silently swapped, so a stack is never nine trial tiers plus one thing you have to operate.
+- `openCompare(stage)` — the full comparison table for one decision (cost, lock-in, weight,
+  pros, cons), behind a click.
 - `profile(answers)` — what the 8 answers actually mean, second-order dimensions included.
 - `decide(answers)` — the single source of truth for every pick. `recommend()`,
   `graphTargets()` and `renderSpinKit()` all read from it, so the cards, the canvas and the
