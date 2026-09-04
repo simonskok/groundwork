@@ -107,6 +107,11 @@ Everything on the client is in `index.html`:
 - `decide(answers)` — the single source of truth for every pick. `recommend()`,
   `graphTargets()` and `renderSpinKit()` all read from it, so the cards, the canvas and the
   provisioning panel can never disagree. Add a rule here, not in three places.
+- `LAYERS` — results are grouped into the layers every app has ("Where it lives", "What it
+  remembers", …), closing on the one layer that is actually yours.
+- `counterfactual(answers, stage)` — the "had you said X, this would be Y" line under each
+  pick. Computed by re-running `decide()` with each answer flipped, so it can never
+  contradict the recommendation.
 - `recommend(answers, idea)` — the deterministic rules engine (verdict, cards, cost, plan,
   tips). The prose reasoning lives here.
 - `graphTargets()` / `applyTargets()` / `draw()` — the tangle canvas.

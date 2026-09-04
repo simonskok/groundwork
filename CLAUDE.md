@@ -54,6 +54,17 @@ Frontend is `index.html` — vanilla JS, no build, Google Fonts only. Key struct
   the answer that makes it meaningful arrives and the pick keeps sharpening after. Gate on
   full dependencies instead and nothing moves until the last question — accurate, and it
   feels like nothing happened.
+- `LAYERS` / `ROLE2STAGE` / `LAYER_OF` — the structural view. Cards are grouped into the
+  layers every app has, each with a plain-language line on what it is and what breaks
+  without it, closing on "what makes it yours". A flat list gives a first-timer nothing to
+  hang the picks on; the layers turn the same list into a map that shows most of it is
+  already solved. Cards join to a layer through their `role` string, so `mod()` calls stay
+  unchanged — if you add a card, add its role to `ROLE2STAGE`.
+- `counterfactual(answers, stage)` — "Because you said **cost**. Had you said **scale**,
+  this would be **Vercel**." Computed, never written: every answer is flipped through its
+  other values, `decide()` re-runs, and anything that moves the pick is reported. It cannot
+  drift from the rules because it is the rules asked backwards. Returns "" when nothing you
+  could have said would change the pick, and says nothing rather than inventing a reason.
 - `recommend(answers, idea)` — the deterministic rules engine on top of `decide()`: verdict,
   build approach, stack cards (each with a badge and an "options it beat" with a one-line
   why-not), honest monthly cost built from the picks actually made, tailored ordered plan,

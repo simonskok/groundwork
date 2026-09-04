@@ -113,6 +113,18 @@
   .b-core{background:var(--good-soft);color:var(--good);border:1px solid color-mix(in srgb,var(--good) 30%,transparent)}
   .b-later{background:var(--surface-2);color:var(--muted);border:1px solid var(--line-strong)}
   .b-heads{background:var(--caution-soft);color:var(--caution);border:1px solid color-mix(in srgb,var(--caution) 30%,transparent)}
+  .layergroup{margin:26px 0 0}
+  .layerhead{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:0 0 3px}
+  .layerhead h3{font-family:"Archivo",sans-serif;font-weight:700;font-size:17.5px;margin:0}
+  .layerhead .n{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)}
+  .layersub{margin:0 0 12px;font-size:13.5px;color:var(--muted);max-width:72ch;line-height:1.55}
+  .yours{margin:30px 0 0;border:1px solid var(--warm-line);background:var(--warm-soft);border-radius:14px;padding:19px 21px}
+  .yours h3{font-family:"Fraunces",Georgia,serif;font-optical-sizing:auto;font-weight:600;font-size:21px;letter-spacing:-.012em;margin:7px 0 7px}
+  .yours p{margin:0;font-size:14px;color:var(--muted);line-height:1.6;max-width:66ch}
+  /* subordinate to .why by size and the rule above it, not by low contrast:
+     this is meaningful content and has to clear AA in both themes */
+  .mod .cf{margin-top:8px;padding-top:8px;border-top:1px dashed var(--line);font-size:12.5px;color:var(--muted);line-height:1.5}
+  .mod .cf b{color:var(--ink);font-weight:600}
   .mod details{margin-top:4px}
   .mod summary{cursor:pointer;font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--cool);list-style:none}
   .mod summary::-webkit-details-marker{display:none}
@@ -482,6 +494,116 @@ function decide(a){
   return {p:p,pick:pick,active:active,needs:needs};
 }
 
+/* ---------- Layers: the structural view -----------------------------------
+   A flat list of ten picks gives a first-time founder nothing to hang them on.
+   Grouped into the layers every app has, the same list becomes a map, and the
+   map makes the point the whole product exists to make: four of these layers
+   are solved problems you rent, and only the last one is yours. */
+var LAYERS=[
+  {id:"build",    title:"How you build it",
+   sub:"The tools you actually sit in front of. Everything below this is something you wire up once and stop thinking about."},
+  {id:"live",     title:"Where it lives",
+   sub:"The address people type and the machines that answer. Set up once; without it there is nothing to visit."},
+  {id:"remember", title:"What it remembers",
+   sub:"Where your data sleeps between visits. Without it, every reload is a first visit and nothing anyone does sticks."},
+  {id:"does",     title:"What it can do",
+   sub:"The specific capabilities you asked for. Each is a service you rent by the month, not a system you run."},
+  {id:"money",    title:"How money moves",
+   sub:"Taking money is a solved problem that takes an afternoon. Putting it off is the expensive part, not the wiring."},
+  {id:"reach",    title:"How it reaches people",
+   sub:"Login links, receipts, the messages your app has to send. Quietly the piece most likely to fail silently."},
+  {id:"watch",    title:"How you see what's happening",
+   sub:"Without this you are guessing about what people do and why things break. Both answers are cheap to have."}
+];
+/* card role → stage key → layer. Roles are the join, so mod() calls stay as they are. */
+var ROLE2STAGE={
+  "Build with":"build","Code home":"repo","Site":"site","The app itself":"platform",
+  "Frontend host":"front","Engine host":"compute","Backend":"compute",
+  "Data + accounts":"data","AI":"ai","Payments":"pay","Email":"email",
+  "See usage":"analytics","Deep errors":"errors","Real-time":"realtime",
+  "Job queue":"queue","Domain + DNS":"dns"
+};
+var LAYER_OF={build:"build",repo:"build",site:"build",platform:"build",
+  front:"live",compute:"live",dns:"live",
+  data:"remember",
+  ai:"does",realtime:"does",queue:"does",
+  pay:"money",
+  email:"reach",
+  analytics:"watch",errors:"watch"};
+
+/* ---------- Counterfactuals: what would have changed this pick -------------
+   Not hand-written. Every answer is flipped through its other values, decide()
+   is re-run, and anything that moves the pick is reported. It cannot drift from
+   the rules because it IS the rules, asked a different question. This is the
+   part that turns "trust me" into "here's the lever, and here's where it goes". */
+var Q_VALUES={
+  type:["website","webapp","marketplace","aitool","content","internal"],
+  accounts:["yes","no"], pay:["yes","later","no"], heavy:["yes","no"],
+  ai:["yes","no"], realtime:["yes","no"],
+  comfort:["nontech","some","dev"], priority:["speed","cost","scale"]
+};
+var A_LABEL={
+  type:{website:"a simple site",webapp:"a web app",marketplace:"a marketplace",aitool:"an AI tool",content:"a content site",internal:"an internal tool"},
+  accounts:{yes:"people log in",no:"no logins"},
+  pay:{yes:"charging now",later:"charging later",no:"not charging"},
+  heavy:{yes:"heavy processing",no:"no heavy processing"},
+  ai:{yes:"it uses AI",no:"no AI"},
+  realtime:{yes:"real-time",no:"no real-time"},
+  comfort:{nontech:"not technical",some:"a little technical",dev:"a developer"},
+  priority:{speed:"speed",cost:"cost",scale:"scale"}
+};
+/* the answers that read as goals come first: those make the most useful sentence */
+var Q_RANK=["priority","comfort","type","pay","heavy","accounts","ai","realtime"];
+var ID_LABEL={};
+STAGES.forEach(function(s){s.opts.forEach(function(o){ID_LABEL[o[0]]=o[1];});});
+/* a few picks read better in prose than as a node label */
+ID_LABEL.neon="Neon + Clerk"; ID_LABEL.sbrt="Supabase Realtime"; ID_LABEL.cfpages="Cloudflare Pages";
+ID_LABEL.lemon="Lemon Squeezy"; ID_LABEL.serverless="no server at all"; ID_LABEL.cloudrun="Cloud Run";
+
+function joinOr(list){
+  if(list.length===1)return list[0];
+  if(list.length===2)return list[0]+" or "+list[1];
+  return list.slice(0,-1).join(", ")+" or "+list[list.length-1];
+}
+
+/* Returns one sentence, or "" when nothing you could have said would change it. */
+function counterfactual(a,stage){
+  if(!stage||!Q_VALUES.type)return "";
+  var base=decide(a), was=base.pick[stage], wasOn=base.active[stage]!==false;
+  var by={};                                   // question → [{v, to}]
+  Object.keys(Q_VALUES).forEach(function(q){
+    if(!a[q])return;
+    Q_VALUES[q].forEach(function(v){
+      if(v===a[q])return;
+      var alt={}; Object.keys(a).forEach(function(k){alt[k]=a[k];}); alt[q]=v;
+      var d2=decide(alt), nowOn=d2.active[stage]!==false, now=d2.pick[stage];
+      var changed = wasOn!==nowOn || (nowOn&&wasOn&&now!==was);
+      if(!changed)return;
+      (by[q]=by[q]||[]).push({v:v,to:nowOn?now:null});
+    });
+  });
+  var qs=Object.keys(by);
+  if(!qs.length)return "";                     // nothing moves it: say nothing
+  /* the strongest lever, preferring the answers that read as goals */
+  qs.sort(function(x,y){
+    var d=by[y].length-by[x].length; if(d)return d;
+    return Q_RANK.indexOf(x)-Q_RANK.indexOf(y);
+  });
+  var q=qs[0], flips=by[q];
+  /* group the flips by where they land, and report the largest group */
+  var groups={};
+  flips.forEach(function(f){var k=f.to||"__off";(groups[k]=groups[k]||[]).push(f.v);});
+  var best=Object.keys(groups).sort(function(x,y){return groups[y].length-groups[x].length;})[0];
+  /* when every other answer lands in the same place, say so instead of listing five */
+  var others=Q_VALUES[q].length-1, said;
+  if(groups[best].length===others&&others>=3) said="<b>anything else</b>";
+  else said=joinOr(groups[best].map(function(v){return "<b>"+(A_LABEL[q][v]||v)+"</b>";}));
+  var head="Because you said <b>"+(A_LABEL[q][a[q]]||a[q])+"</b>. Had you said "+said+", ";
+  if(best==="__off") return head+(wasOn?"you wouldn't need this at all.":"this would be back on the list.");
+  if(!wasOn) return head+"you'd be adding <b>"+(ID_LABEL[best]||best)+"</b> here.";
+  return head+"this would be <b>"+(ID_LABEL[best]||best)+"</b>.";
+}
+
 /* ---------- The recommendation engine ------------------------------------- */
 function recommend(a, idea){
   var d=decide(a), p=d.p, pick=d.pick, on=d.active;
@@ -522,7 +644,11 @@ function recommend(a, idea){
   if(p.payouts&&!p.marketplaceVerdict) sub+=" One exception to all of that: you're paying other people, and that part is genuinely hard. Don't build it yourself.";
 
   /* ---- cards ---- */
-  function mod(role,name,why,badge,alts){mods.push({role:role,pick:name,why:why,badge:badge||"",alts:(alts||[]).filter(Boolean)})}
+  function mod(role,name,why,badge,alts){
+    var stage=ROLE2STAGE[role]||"";
+    mods.push({role:role,pick:name,why:why,badge:badge||"",alts:(alts||[]).filter(Boolean),
+      stage:stage, layer:LAYER_OF[stage]||"build", cf:counterfactual(a,stage)});
+  }
 
   var platformOnly=p.internal&&p.nonTech;   // the verdict already said: use Retool, don't build
   if(!platformOnly) mod("Build with",
@@ -1030,10 +1156,22 @@ function renderResults(r,isShared){
   function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
   var base=location.origin+location.pathname;
   var shareUrl=shareURL(answers,$("#idea").value);
-  var modsHtml=r.mods.map(function(m){
+  function cardHtml(m){
     var alts=m.alts&&m.alts.length?'<details><summary>options it beat</summary><ul class="alts">'+m.alts.map(function(x){return '<li><b>'+esc(x[0])+'</b>, '+esc(x[1])+'</li>'}).join("")+'</ul></details>':"";
-    return '<div class="mod"><span class="role">'+esc(m.role)+'</span><span class="pick">'+esc(m.pick)+'</span>'+badge(m.badge)+'<span class="why">'+m.why+'</span>'+alts+'</div>';
+    var cf=m.cf?'<span class="cf">'+m.cf+'</span>':"";
+    return '<div class="mod"><span class="role">'+esc(m.role)+'</span><span class="pick">'+esc(m.pick)+'</span>'+badge(m.badge)+'<span class="why">'+m.why+'</span>'+cf+alts+'</div>';
+  }
+  var layersHtml=LAYERS.map(function(L){
+    var inLayer=r.mods.filter(function(m){return m.layer===L.id;});
+    if(!inLayer.length)return "";
+    return '<section class="layergroup"><div class="layerhead"><h3>'+esc(L.title)+'</h3>'+
+      '<span class="n">'+inLayer.length+(inLayer.length===1?" pick":" picks")+'</span></div>'+
+      '<p class="layersub">'+esc(L.sub)+'</p>'+
+      '<div class="modules">'+inLayer.map(cardHtml).join("")+'</div></section>';
   }).join("");
+  var yoursHtml='<section class="yours"><span class="eyebrow">what makes it yours</span>'+
+    '<h3>None of that was your idea.</h3>'+
+    '<p>Every layer above this line is the same plumbing sitting behind the apps you already use, rented by the month and wired up once. It is genuinely a solved problem, and it is now solved. What is left is the part no list could have picked for you, and it is the only part left to build.</p></section>';
   var planHtml=r.plan.map(function(s,i){return '<div class="step"><span class="n">'+(i+1)+'</span><div><b>'+s[0]+'</b><p>'+s[1]+'</p></div></div>'}).join("");
   var tipsHtml=r.tips.map(function(t){return '<div class="tip"><span class="i">›</span><div><b>'+t[0]+'.</b> '+t[1]+'</div></div>'}).join("");
   var bannerHtml=isShared?'<div class="sharedbanner"><span>📍 You\'re viewing a <b>shared stack</b>. Want the same honest read for your own idea?</span><button id="startmine">Build your own →</button></div>':"";
@@ -1061,7 +1199,7 @@ function renderResults(r,isShared){
     bannerHtml+
     '<div class="verdict"><span class="eyebrow">'+(isShared?"The read":"Your read")+'</span><h2>'+r.verdict+'</h2><p>'+r.sub+'</p><div class="approach"><span>How to build it:</span> <b>'+r.approach+'</b></div></div>'+
     '<div id="airead"></div>'+
-    '<div class="sectlabel">The stack, each pick shows the options it beat</div><div class="modules">'+modsHtml+'</div>'+
+    '<div class="sectlabel">Your stack, in layers</div>'+layersHtml+yoursHtml+
     '<div class="sectlabel">What it costs</div><div class="costrow"><span class="big">'+r.costLabel+'</span><span class="cap">'+r.costCap+'</span></div>'+
     '<div class="sectlabel">How to proceed</div><div class="plan">'+planHtml+'</div>'+
     '<div class="sectlabel">Watch out for</div><div class="tips">'+tipsHtml+'</div>'+
