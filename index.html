@@ -118,6 +118,7 @@
   .coherence.flag{border-color:var(--warm-line);background:var(--warm-soft)}
   .coherence h3{font-family:"Archivo",sans-serif;font-weight:700;font-size:18px;margin:7px 0 7px}
   .coherence p{margin:0;font-size:14px;color:var(--muted);line-height:1.6;max-width:68ch}
+  .cosplit{margin-top:9px!important;font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--ink)!important}
   .wbar{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
   .wchip{display:inline-flex;align-items:center;gap:6px;font-family:"IBM Plex Mono",monospace;font-size:10.5px;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px 9px}
   .wchip i{width:calc(3px * var(--w));height:9px;border-radius:2px;background:var(--cool);opacity:.55}
@@ -525,6 +526,30 @@ function decide(a){
      does real damage, so it gets a card instead of being assumed. */
   set("secrets", p.dev&&p.scale ? "doppler" : "hostenv", !p.pureSite,["comfort","priority"]);
 
+  /* Where the words live. Only a content site really has this problem. */
+  set("cms", p.dev?"mdrepo":"sanity", p.content,["type","comfort"]);
+
+  /* Joining things up. For a non-technical founder this IS how features get
+     built, and it deserves a card rather than being left as folklore. */
+  set("glue", p.nonTech?"zapier":(p.cost?"make":"zapier"), p.nonTech||p.internal,["comfort","type"]);
+
+  /* Talking to users. Start at an email address and mean it. */
+  set("support", p.scale?"crisp":"justemail",
+    p.publicFacing&&(p.auth||p.charge),["accounts","pay","priority"]);
+
+  /* Staying in touch. The channel to people who already said yes, which is
+     worth more than another feature and is the thing founders skip. */
+  set("marketing", p.cost?"buttondown":(p.content?"kit":"loops"),
+    p.publicFacing,["type","priority"]);
+
+  set("forms", p.dev&&p.scale?"ownform":"tally", p.publicFacing,["type","comfort","priority"]);
+
+  /* The legal bits. Dull, an hour's work, and genuinely blocks a launch. */
+  set("legal","termly", p.publicFacing&&(p.auth||p.charge),["accounts","pay"]);
+
+  set("uptime", p.cost?"uptimerobot":"betterstack", p.chargeNow||p.scale,["pay","priority"]);
+  set("backup", p.scale?"ownbackup":"hostbackup", !p.pureSite&&(p.chargeNow||p.scale),["pay","priority"]);
+
   set("dns", p.cost?"cloudflare":"namecheap", true,["priority"]);
 
   return {p:p,pick:pick,active:active,needs:needs};
@@ -677,6 +702,73 @@ var TOOLS={
   doppler:{name:"Doppler",stage:"secrets",what:"One place that holds every key and pushes it everywhere.",cost:"free tier, then from ~$8/user/mo",lockin:"low",checked:CHECKED,
     weight:3,pros:["one source of truth for every key","syncs everywhere","revoke on departure"],cons:["per-user pricing","premature for one person"],against:{any:"worth it once keys live in four places and a person leaves, and premature before that"}},
 
+
+  /* --- where the words live --- */
+  mdrepo:{name:"Markdown in the repo",stage:"cms",what:"Posts are files next to the code, edited like anything else.",cost:"free",lockin:"none, they're just files",checked:CHECKED,weight:2,pros:["free","versioned with the code","nothing to break"],cons:["needs a repo to edit","no preview for non-technical writers"],
+    against:{any:"free and permanent, and anyone who isn't technical can't publish without you",nontech:"you would need the repo open to fix a typo, which is the opposite of what you want"}},
+  sanity:{name:"Sanity",stage:"cms",what:"A proper editing interface for content your app reads over an API.",cost:"free tier, then from ~$15/mo",lockin:"medium",checked:CHECKED,weight:2,pros:["real editor for non-technical writers","structured content","generous free tier"],cons:["another service and schema to learn","overkill for a handful of pages"],
+    against:{any:"the right answer once someone other than you writes, and a lot of machinery before that"}},
+  notioncms:{name:"Notion as the CMS",stage:"cms",what:"Write in Notion; the site reads it through the API.",cost:"free tier",lockin:"medium",checked:CHECKED,weight:1,pros:["you already know it","genuinely pleasant to write in","zero new tools"],cons:["API is slow and rate-limited","not built for this"],
+    against:{any:"lovely to write in, and its API will make your pages slow if the site gets real traffic"}},
+  payloadcms:{name:"Payload",stage:"cms",what:"An open-source CMS that lives in your own codebase.",cost:"free self-hosted",lockin:"none",checked:CHECKED,weight:3,pros:["fully yours","no per-seat cost","deep customisation"],cons:["you host and update it","more setup than a hosted CMS"],
+    against:{any:"completely yours, and completely your job to run"}},
+
+  /* --- automation without code --- */
+  zapier:{name:"Zapier",stage:"glue",what:"Connects the tools you already use, without writing code.",cost:"free tier, then from ~$20/mo",lockin:"low",checked:CHECKED,weight:1,pros:["connects almost everything","no code at all","working in minutes"],cons:["priced per task, climbs fast","slow for anything time-sensitive"],
+    against:{any:"the fastest way to join two tools, and the bill grows with every run once it works",cost:"per-task pricing is the worst shape there is once something succeeds"}},
+  make:{name:"Make",stage:"glue",what:"The same job as Zapier, with a visual flow builder.",cost:"free tier, then from ~$9/mo",lockin:"low",checked:CHECKED,weight:2,pros:["much cheaper per operation","visual branching and loops"],cons:["steeper to learn than Zapier","fewer ready-made connectors"],
+    against:{any:"cheaper than Zapier per run, and you will spend an afternoon learning the canvas"}},
+  n8n:{name:"n8n",stage:"glue",what:"Open-source automation you can self-host.",cost:"free self-hosted, cloud from ~$20/mo",lockin:"none",checked:CHECKED,weight:3,pros:["no per-task fee if self-hosted","fully yours","handles real logic"],cons:["you run it","assumes more technical comfort"],
+    against:{any:"no per-run bill at all, in exchange for running a server you didn't previously have",nontech:"self-hosting is exactly the kind of job you said you would rather not own"}},
+
+  /* --- talking to users --- */
+  justemail:{name:"A plain email address",stage:"support",what:"help@yourdomain, read by you.",cost:"free",lockin:"none",checked:CHECKED,weight:1,pros:["free","zero setup","every customer knows how"],cons:["no shared inbox","threads get lost as volume grows"],
+    against:{any:"genuinely enough for your first hundred users, and it falls apart when two people answer"}},
+  crisp:{name:"Crisp",stage:"support",what:"A chat bubble on your site plus a shared inbox behind it.",cost:"free tier, then from ~$45/mo",lockin:"low",checked:CHECKED,weight:2,pros:["generous free tier","chat and inbox in one","quick to install"],cons:["one more thing to watch","chat sets an expectation of fast replies"],
+    against:{any:"the cheapest way to be reachable in-product, and a chat bubble is a promise to answer quickly"}},
+  intercom:{name:"Intercom",stage:"support",what:"Support, product tours and messaging, at scale.",cost:"from ~$39/seat/mo",lockin:"medium",checked:CHECKED,weight:3,pros:["does far more than chat","strong automation"],cons:["expensive early","much more than a small product needs"],
+    against:{any:"what you grow into, and comfortably the most expensive way to answer ten emails a week"}},
+  plain:{name:"Plain",stage:"support",what:"A support inbox built for small product teams.",cost:"free tier, then usage-based",lockin:"low",checked:CHECKED,weight:2,pros:["clean and fast","built for developers"],cons:["fewer integrations","younger product"],
+    against:{any:"a tidier inbox than email, and one more login for something email already half does"}},
+
+  /* --- how people find you --- */
+  loops:{name:"Loops",stage:"marketing",what:"Newsletters and onboarding sequences, built for software products.",cost:"free to 1,000 contacts, then from ~$49/mo",lockin:"low",checked:CHECKED,weight:2,pros:["made for product emails","simple, modern editor","good free tier"],cons:["fewer marketing bells than Kit","younger company"],
+    against:{any:"the cleanest fit for a software product, with less marketing machinery than Kit"}},
+  kit:{name:"Kit (ConvertKit)",stage:"marketing",what:"The creator newsletter standard.",cost:"free to 10,000 subscribers",lockin:"low",checked:CHECKED,weight:2,pros:["free to 10,000 subscribers","excellent automations","built for audience-building"],cons:["aimed at creators more than products","interface shows its age"],
+    against:{any:"the most generous free tier here, aimed at creators rather than software"}},
+  beehiiv:{name:"beehiiv",stage:"marketing",what:"Newsletter platform with growth and ad tools built in.",cost:"free tier, then from ~$39/mo",lockin:"medium",checked:CHECKED,weight:2,pros:["growth tools included","can earn money from the newsletter"],cons:["the newsletter lives on their platform","less suited to product emails"],
+    against:{any:"best if the newsletter IS the product, weaker if it's a channel to one"}},
+  mailchimp:{name:"Mailchimp",stage:"marketing",what:"The one everybody has heard of.",cost:"free tier, then from ~$13/mo and climbing",lockin:"low",checked:CHECKED,weight:2,pros:["everyone knows it","enormous template library"],cons:["gets expensive quickly","heavier than most founders need"],
+    against:{any:"familiar, and the price climbs steeply with list size for features you won't open"}},
+  buttondown:{name:"Buttondown",stage:"marketing",what:"A deliberately small, plain newsletter tool.",cost:"free to 100 subscribers, then from ~$9/mo",lockin:"none",checked:CHECKED,weight:1,pros:["cheap","simple","writes in markdown"],cons:["few marketing features","no visual builder"],
+    against:{any:"the least tool for the job, which is a compliment until you want automation"}},
+  tally:{name:"Tally",stage:"forms",what:"Forms that look like a document and cost nothing.",cost:"free, generous",lockin:"none",checked:CHECKED,weight:1,pros:["free with almost no limits","fast to build","looks good by default"],cons:["fewer integrations than Typeform","less analytics"],
+    against:{any:"free and more than good enough, with fewer connectors than Typeform"}},
+  typeform:{name:"Typeform",stage:"forms",what:"Conversational forms with high completion rates.",cost:"free tier is small, then from ~$25/mo",lockin:"low",checked:CHECKED,weight:1,pros:["highest completion rates","polished feel"],cons:["free tier is genuinely tight","expensive for what it is"],
+    against:{any:"prettier and better-converting, and the free tier runs out almost immediately"}},
+  gforms:{name:"Google Forms",stage:"forms",what:"Free forms straight into a spreadsheet.",cost:"free",lockin:"none",checked:CHECKED,weight:1,pros:["free forever","results land in a sheet","everyone can use it"],cons:["looks like a Google Form","no branding"],
+    against:{any:"free and instantly recognisable as free, which matters if it's customer-facing"}},
+  ownform:{name:"Build the form yourself",stage:"forms",what:"A form in your own app, writing to your own database.",cost:"free",lockin:"none",checked:CHECKED,weight:2,pros:["data lands in your database","no third party","full control"],cons:["a day of work a tool does in ten minutes","spam handling is now yours"],
+    against:{any:"the right call once the form is part of the product, and a waste of a day before that"}},
+
+  /* --- staying out of trouble --- */
+  termly:{name:"Termly",stage:"legal",what:"Generates a privacy policy, terms and a cookie banner.",cost:"free tier, then from ~$15/mo",lockin:"none",checked:CHECKED,weight:1,pros:["covers the basics in an hour","keeps up with law changes","cookie banner included"],cons:["generic wording","not legal advice"],
+    against:{any:"the fastest way to be roughly right, and no substitute for a lawyer once money is real"}},
+  iubenda:{name:"iubenda",stage:"legal",what:"The same job, stronger on EU rules.",cost:"free tier, then from ~$29/yr per item",lockin:"none",checked:CHECKED,weight:1,pros:["strong GDPR coverage","many languages"],cons:["priced per document and per site","interface is dense"],
+    against:{any:"better on EU specifics, priced per document in a way that adds up"}},
+  ownlegal:{name:"A template you adapt",stage:"legal",what:"A well-known open template, edited to fit.",cost:"free",lockin:"none",checked:CHECKED,weight:2,pros:["free","you understand what it says"],cons:["nobody updates it when the law moves","easy to get subtly wrong"],
+    against:{any:"free and yours, and stale the moment the law changes, which nobody will tell you about"}},
+  betterstack:{name:"Better Stack",stage:"uptime",what:"Tells you the site is down, usually before a customer does.",cost:"free tier, then from ~$29/mo",lockin:"none",checked:CHECKED,weight:1,pros:["free tier is enough for one site","status page included","phone alerts"],cons:["another account","alerts can get noisy"],
+    against:{any:"more polished than UptimeRobot, and its free tier is smaller"}},
+  uptimerobot:{name:"UptimeRobot",stage:"uptime",what:"The cheap, boring uptime checker.",cost:"free for 50 monitors",lockin:"none",checked:CHECKED,weight:1,pros:["free for far more than you need","five minutes to set up"],cons:["dated interface","basic alerting"],
+    against:{any:"free for fifty sites and looks like it was built in 2009, which does not affect whether it works"}},
+  hostuptime:{name:"Whatever your host shows you",stage:"uptime",what:"The dashboard you already have.",cost:"free",lockin:"none",checked:CHECKED,weight:1,pros:["already there","nothing to set up"],cons:["only tells you if you go and look","no alert when it matters"],
+    against:{any:"free and already there, and it will never wake you up, which is the entire point of uptime monitoring"}},
+  hostbackup:{name:"Your host's automatic backups",stage:"backup",what:"Point-in-time recovery your database provider already runs.",cost:"included on most paid tiers",lockin:"none",checked:CHECKED,weight:1,pros:["already running","no work at all"],cons:["often only on paid tiers","you have never tested a restore"],
+    against:{any:"already running and almost certainly untested, which is not the same as having backups"}},
+  ownbackup:{name:"A scheduled export you keep",stage:"backup",what:"A nightly dump to storage you control.",cost:"pennies",lockin:"none",checked:CHECKED,weight:2,pros:["survives losing the account itself","you can test a restore"],cons:["you set it up and check it","one more thing to forget"],
+    against:{any:"the only backup that survives losing the vendor, and it is yours to remember"}},
+
   sentry:{name:"Sentry",stage:"errors",what:"Full stack traces when something breaks.",cost:"free tier, then from ~$26/mo",lockin:"low",checked:CHECKED,
     weight:2,pros:["full stack traces","the standard for a reason"],cons:["another paid line","noise before you have real traffic"],against:{cost:"another paid line for something PostHog already half does",any:"what you want when debugging gets serious, and noise before that"}},
   pherrors:{name:"PostHog error tracking",stage:"errors",what:"Errors alongside the analytics you already have.",cost:"included",lockin:"low",checked:CHECKED,
@@ -700,6 +792,14 @@ var COMPETES={
   storage:["sbstorage","r2","s3"],
   search:["pgsearch","typesense","algolia"],
   secrets:["hostenv","doppler"],
+  cms:["mdrepo","sanity","notioncms","payloadcms"],
+  glue:["zapier","make","n8n"],
+  support:["justemail","crisp","intercom","plain"],
+  marketing:["loops","kit","beehiiv","mailchimp","buttondown"],
+  forms:["tally","typeform","gforms","ownform"],
+  legal:["termly","iubenda","ownlegal"],
+  uptime:["betterstack","uptimerobot","hostuptime"],
+  backup:["hostbackup","ownbackup"],
   realtime:["sbrt","pusher","ably"],
   queue:["upstash","pgqueue"],
   dns:["namecheap","cloudflare"]
@@ -786,8 +886,12 @@ var LAYERS=[
    sub:"Taking money is a solved problem that takes an afternoon. Putting it off is the expensive part, not the wiring."},
   {id:"reach",    title:"How it reaches people",
    sub:"Login links, receipts, the messages your app has to send. Quietly the piece most likely to fail silently."},
+  {id:"grow",     title:"How people find you",
+   sub:"The part founders skip and then blame the product for. A way to reach the people who already said yes is worth more than another feature."},
   {id:"watch",    title:"How you see what's happening",
-   sub:"Without this you are guessing about what people do and why things break. Both answers are cheap to have."}
+   sub:"Without this you are guessing about what people do and why things break. Both answers are cheap to have."},
+  {id:"safe",     title:"How you stay out of trouble",
+   sub:"Dull, quick, and the only things here that can stop you launching or lose you everything at once."}
 ];
 /* card role → stage key → layer. Roles are the join, so mod() calls stay as they are. */
 var ROLE2STAGE={
@@ -795,7 +899,10 @@ var ROLE2STAGE={
   "Frontend host":"front","Engine host":"compute","Backend":"compute",
   "Data + accounts":"data","AI":"ai","Payments":"pay","Email":"email",
   "See usage":"analytics","Deep errors":"errors","Real-time":"realtime",
-  "Job queue":"queue","Domain + DNS":"dns","Files":"storage","Search":"search","Your keys":"secrets"
+  "Job queue":"queue","Domain + DNS":"dns","Files":"storage","Search":"search","Your keys":"secrets",
+  "Where the words live":"cms","Joining things up":"glue","Talking to users":"support",
+  "Staying in touch":"marketing","Forms":"forms","The legal bits":"legal",
+  "Knowing it's down":"uptime","If it all goes wrong":"backup"
 };
 var LAYER_OF={build:"build",repo:"build",site:"build",platform:"build",
   front:"live",compute:"live",dns:"live",
@@ -804,7 +911,10 @@ var LAYER_OF={build:"build",repo:"build",site:"build",platform:"build",
   ai:"does",realtime:"does",queue:"does",
   pay:"money",
   email:"reach",
-  analytics:"watch",errors:"watch"};
+  analytics:"watch",errors:"watch",uptime:"watch",
+  cms:"remember",glue:"does",support:"reach",
+  marketing:"grow",forms:"grow",
+  legal:"safe",backup:"safe"};
 
 /* ---------- Counterfactuals: what would have changed this pick -------------
    Not hand-written. Every answer is flipped through its other values, decide()
@@ -1061,6 +1171,64 @@ function recommend(a, idea){
       "core", pick.secrets);
   }
 
+  if(on.cms){
+    mod("Where the words live", pick.cms==="mdrepo"?"Markdown in the repo":"Sanity",
+      pick.cms==="mdrepo"
+        ? "Posts are files beside the code: versioned, free, and nothing extra to run. You're comfortable in a repo, so this is the least machinery that works."
+        : "Someone other than you will eventually write here, and asking them to open a repo to fix a typo is how a content site quietly dies. A real editor is worth the extra service.",
+      "core", pick.cms);
+  }
+
+  if(on.glue){
+    mod("Joining things up", pick.glue==="make"?"Make":"Zapier",
+      pick.glue==="make"
+        ? "Connect the tools you already use without writing anything. Make costs a fraction of Zapier per run, which matters when you asked to keep the bill down."
+        : "Half the features you think you need to build are two tools talking to each other. Zapier does that in an afternoon, with no code, and you can replace it with real code later if it earns its keep.",
+      "later", pick.glue);
+  }
+
+  if(on.support){
+    mod("Talking to users", pick.support==="crisp"?"Crisp":"An email address",
+      pick.support==="crisp"
+        ? "At the volume you're aiming for you need a shared inbox and a way for people to reach you in-product without leaving it."
+        : "help@yourdomain, read by you. It is genuinely enough for your first hundred users, and every hour spent on a support tool before then is an hour not spent talking to them.",
+      pick.support==="crisp"?"core":"later", pick.support);
+  }
+
+  if(on.marketing){
+    mod("Staying in touch", pick.marketing==="buttondown"?"Buttondown":(pick.marketing==="kit"?"Kit":"Loops"),
+      "A way to reach the people who already said yes. This is the one founders skip and then blame the product: without it, everyone who liked it and wasn't ready is gone for good."+
+      (pick.marketing==="buttondown"?" Buttondown is the cheapest way to have one at all.":""),
+      "later", pick.marketing);
+  }
+
+  if(on.forms){
+    mod("Forms", pick.forms==="ownform"?"Build it into the app":"Tally",
+      pick.forms==="ownform"
+        ? "The form is part of the product now, so it belongs in your database rather than someone else's."
+        : "Waitlists, feedback, applications, surveys. Tally is free and takes ten minutes, and building the same thing yourself takes a day you could spend on the product.",
+      "later", pick.forms);
+  }
+
+  if(on.legal){
+    mod("The legal bits","Termly",
+      "You're collecting personal data, which means a privacy policy, terms, and a cookie banner if you have EU visitors. It is an hour of dull work that can block a launch, and generated pages are roughly right, which beats nothing by a distance.",
+      p.chargeNow?"core":"later","termly",
+      [["A lawyer","the right answer once real money is moving, and premature before that"]]);
+  }
+
+  if(on.uptime){
+    mod("Knowing it's down", pick.uptime==="uptimerobot"?"UptimeRobot":"Better Stack",
+      "People are paying you, so finding out from a customer that the site is down is the wrong way round. Five minutes to set up, free at your size.","later", pick.uptime);
+  }
+
+  if(on.backup){
+    mod("If it all goes wrong", pick.backup==="ownbackup"?"Your own scheduled export":"Your host's backups",
+      pick.backup==="ownbackup"
+        ? "At this scale, a backup that lives inside the account you might lose isn't a backup. A nightly export to storage you control costs pennies and is the only version that survives everything."
+        : "Your database provider already takes them. The part everyone skips is testing a restore once, before it matters, so do that this month.","later", pick.backup);
+  }
+
   mod("Deep errors","Sentry, later",
     (on.analytics&&pick.analytics==="posthog")?"PostHog catches errors early. Add Sentry when you need full stack-trace debugging under real load."
       :"Add it when something breaks and you can't tell why from the logs. Before that it's noise you'll mute.","later","sentry");
@@ -1167,12 +1335,16 @@ function recommend(a, idea){
     if(on[st]===false||!TOOLS[pick[st]])return;
     counted++; if(weightOf(pick[st])<=2)light++;
   });
-  var coherence={total:counted, light:light, band:hp.band, over:hp.over};
+  var nowCount=0, laterCount=0;
+  mods.forEach(function(m){ if(m.badge==="later")laterCount++; else nowCount++; });
+  var coherence={total:counted, light:light, band:hp.band, over:hp.over,
+                 now:nowCount, later:laterCount};
   if(!hp.over.length){
     coherence.headline = light===counted
       ? "Every piece here is click-and-forget."
       : "Everything here is the same size of decision.";
     coherence.body = "Nothing in this stack asks more of you than the rest of it. That is deliberate: a stack you can hold in your head is worth more than a stack of individually perfect parts.";
+    coherence.split = nowCount+" to set up before you launch, "+laterCount+" to add when they actually matter.";
   } else {
     var names=hp.over.map(function(o){return o.name;});
     coherence.headline = light+" of your "+counted+" picks are click-and-forget. "+
@@ -1181,6 +1353,7 @@ function recommend(a, idea){
       " a genuine step up: something you configure and keep an eye on, not something you switch on and forget. "+
       "It's here because the alternatives can't do what you asked for, not because more is better. "+
       "If you want the lighter stack, change the answer that put it there.";
+    coherence.split = nowCount+" to set up before you launch, "+laterCount+" to add when they actually matter.";
   }
 
   /* the graph shape the canvas needs */
@@ -1461,6 +1634,7 @@ function renderResults(r,isShared){
   var coherenceHtml=co.headline?'<section class="coherence'+(co.over&&co.over.length?' flag':'')+'">'+
     '<span class="eyebrow">'+(co.over&&co.over.length?"one step up":"how heavy this is")+'</span>'+
     '<h3>'+esc(co.headline)+'</h3><p>'+esc(co.body)+'</p>'+
+    (co.split?'<p class="cosplit">'+esc(co.split)+'</p>':"")+
     '<div class="wbar">'+(function(){
       var d=decide(answers), out=[];
       Object.keys(d.pick).forEach(function(st){

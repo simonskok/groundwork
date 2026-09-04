@@ -47,7 +47,7 @@ npm run test:live    # RUN_LIVE=1 + a model key; POSIX shells only (env-prefix s
 ## Where things live
 
 ```
-index.html          The entire frontend: CSS (13–273), HTML (275–352), JS (354–1850)
+index.html          The entire frontend: CSS 13–290, HTML 292–369, JS 371–2024
 api/tailor.js       AI layer — Gemini default / Groq fallback. 3 stages: followups/insights/brief
 api/share.js        Short share links (?r=) — Neon-backed. GET resolves, POST creates
 api/capture.js      Anonymous session capture (the data moat) + opt-in email. Two phases
@@ -62,6 +62,11 @@ vercel.json         cleanUrls + security headers. Zero-config routing otherwise
 Full component/deps view → **ARCHITECTURE.md**. Module graph with `file:line` →
 **MODULE_MAP.md**. Symbol lookup table → **SYMBOL_INDEX.md**. Entry points and traced flows
 → **DATA_FLOW.md**. Patterns, testing, footguns → **CONVENTIONS.md**.
+
+> ⚠ Those five were indexed against `index.html` @ 1850 lines. The registry expansion
+> (8 stages, 2 layers, 28 tools) took it to 2024, so **every line number in them is stale**
+> and `openCompare`/`carryBand`/the new stages are missing from SYMBOL_INDEX. Their prose is
+> still accurate; treat the numbers as hints and `grep -n`. Re-index when convenient.
 
 ## Working agreement
 
@@ -94,8 +99,8 @@ Full component/deps view → **ARCHITECTURE.md**. Module graph with `file:line` 
 
 ## Known pitfalls
 
-- **`index.html` line numbers drift constantly** — it's one 1850-line file under active
-  edit. Indexed at 1811 lines, md5 `88161f28…`, 2026-09-04. Always `grep -n` to confirm a
+- **`index.html` line numbers drift constantly** — it's one ~1850-line file under active
+  edit. Indexed at 2024 lines, md5 `33c3da71…`, 2026-09-04. Always `grep -n` to confirm a
   location before editing.
 - **`needs` in `decide()` is the TRIGGER, not the full dependency set.** A stage settles on
   the canvas when the answer that makes it *meaningful* arrives, and the pick keeps
@@ -110,6 +115,14 @@ Full component/deps view → **ARCHITECTURE.md**. Module graph with `file:line` 
   into the `build` layer and gets no counterfactual.
 - **Adding a tool = one entry in `TOOLS` + its id in `COMPETES`.** It then appears wherever
   it competes, automatically, in the compare table and the "options it beat" list.
+- **Not every stage belongs on the canvas.** `STAGES` (16) drives the tangle; `COMPETES` (26)
+  is the full decision set. The canvas only labels *chosen* nodes, so more tentacles crowd it
+  without adding feeling — the newer founder-facing decisions (cms, glue, support, marketing,
+  forms, legal, uptime, backup) are cards only, exactly like `site` and `platform`.
+- **"Start here" has to mean the minimum that gets you live.** With 26 stages it is easy to
+  badge everything `core` and end up with 15 "Start here" cards, which is the upsell the
+  product exists to refuse. The results carry a `now / later` split for exactly this reason;
+  if the median `core` count creeps much past ~12, demote something.
 - **The `api/*` handlers are CommonJS** (`module.exports = handler`) with no framework.
   They read env **at call time**, not import time, so tests can set it dynamically.
 - **`VALID` (the 8 answers whitelist) is duplicated in `api/share.js` and `api/capture.js`.**

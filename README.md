@@ -102,8 +102,9 @@ Code.
 
 Everything on the client is in `index.html`:
 
-- `STAGES` — the decision registry (the tool list): 16 decisions on the canvas, 18 in the
-  engine, 55 tools.
+- `STAGES` — the tangle canvas (16 decisions). `COMPETES` is the full set: **26 decisions
+  across 9 layers, 83 tools.** Founder-facing decisions added later (support, newsletter,
+  forms, legal, uptime, backups, CMS, no-code glue) are cards only, not canvas nodes.
 - `carryBand()` / `heavyPicks()` — complexity coherence. Every tool has a `weight` 1-5; the
   answers imply a band the founder can carry, and anything heavier is named rather than
   silently swapped, so a stack is never nine trial tiers plus one thing you have to operate.
