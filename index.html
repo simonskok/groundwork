@@ -487,7 +487,7 @@ function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a
   STAGES.forEach(function(st){st.opts.forEach(function(o){
     // scattered blob, not a tidy ring: golden-angle base + strong jitter + wide radius spread
     var i=NODES.length, ang=i*2.39996323+(rnd()-0.5)*1.25, r=0.26+rnd()*0.62;
-    NODES.push({stage:st.key,id:o[0],label:o[1],ang:ang,r:r,cur:{a:0,s:0},tgt:{a:1,s:1},role:"pending",seed:rnd()*6.28});
+    NODES.push({stage:st.key,id:o[0],label:o[1],ang:ang,r:r,cur:{a:0,s:0,m:0},tgt:{a:1,s:1,m:0},role:"pending",seed:rnd()*6.28});
   });});
   // cross-links across the blob (co-prime hops guarantee long, crossing lines = a real tangle).
   // Three hop families, not two: with only 7/13 the "bundle" reads as a dot cloud with haze.
@@ -1518,15 +1518,16 @@ function applyTargets(tg,stagger){
      the chosen nodes light one after another, so the eye can follow a path being
      drawn instead of a picture being swapped. */
   var now=performance.now(), k=0, step=stagger?Math.max(55,Math.min(120,900/Math.max(1,Object.keys(tg.chosen).length))):0;
+  lastTG=tg; layoutStack(tg);          // where each pick will sit once it leaves the knot
   NODES.forEach(function(n){
     var active=tg.active[n.stage]!==false;
     var chosen=tg.chosen[n.stage];
     n.hold=0;
-    if(!active){ n.role="pruned"; n.tgt={a:0.08,s:0.5}; }
+    if(!active){ n.role="pruned"; n.tgt={a:0.08,s:0.5,m:0}; }
     else if(chosen){
-      if(n.id===chosen){ n.role="chosen"; n.tgt={a:1,s:1.2}; if(stagger)n.hold=now+(k++)*step; }
-      else { n.role="pruned"; n.tgt={a:0.10,s:0.55}; }
-    } else { n.role="pending"; n.tgt={a:0.82,s:0.95}; }
+      if(n.id===chosen){ n.role="chosen"; n.tgt={a:1,s:1.2,m:1}; if(stagger)n.hold=now+(k++)*step; }
+      else { n.role="pruned"; n.tgt={a:0.10,s:0.55,m:0}; }
+    } else { n.role="pending"; n.tgt={a:0.82,s:0.95,m:0}; }
   });
   // cross-links only survive between two still-undecided nodes, and thin as clarity rises
   LINKS.forEach(function(l){
@@ -1546,24 +1547,84 @@ function resize(){
   var r=cv.getBoundingClientRect(); W=r.width; H=r.height; DPR=Math.min(2,window.devicePixelRatio||1);
   /* The canvas can be laid out at zero width at boot — a background tab, a hidden
      pane, a deferred first layout. draw() bails on W<=0, and resize() used to run
-     only on window.resize, so the figure stayed blank forever: the whole payoff,
-     silently gone, for anyone who opened the link in a background tab. Now the
-     first time we get real dimensions we replay the arc, because until this
-     moment nobody could have seen it. */
+     only on window.resize, so the figure stayed blank forever. */
   if(W>0&&H>0&&!everSized){ everSized=true; setTimeout(maybePlayArc,60); }
   cv.width=W*DPR; cv.height=H*DPR; ctx.setTransform(DPR,0,0,DPR,0,0);
-  CENTER={x:W/2,y:H/2}; RAD=Math.max(1,Math.min(W,H)*0.5 - 26);   // never negative: a 0-sized canvas threw out of createRadialGradient
-  NODES.forEach(function(n){ n.x=CENTER.x+Math.cos(n.ang)*n.r*RAD; n.y=CENTER.y+Math.sin(n.ang)*n.r*RAD; });
+  CENTER={x:W/2,y:H/2}; RAD=Math.max(1,Math.min(W,H)*0.5 - 26);
+  NODES.forEach(function(n){ n.hx=CENTER.x+Math.cos(n.ang)*n.r*RAD; n.hy=CENTER.y+Math.sin(n.ang)*n.r*RAD; n.x=n.hx; n.y=n.hy; });
+  if(lastTG)layoutStack(lastTG);
   draw();
 }
+
+/* ---------- The resolved layout: a stack you can actually read --------------
+   The tangle says how it feels. It cannot say what you got — a spray of dots
+   with names scattered around it is decoration, and at fourteen picks it is an
+   unreadable hairball. So a chosen node leaves the knot and takes its place in
+   the layer it belongs to, as a labelled chip on a row. One picture then carries
+   the feeling at the start AND the answer at the end, and it stays legible at
+   every point between, including with animation switched off entirely. */
+var LAYER_SHORT={build:"Build",live:"Lives on",remember:"Remembers",does:"Can do",
+  money:"Money",reach:"Reaches",grow:"Growth",watch:"Watch",safe:"Safe"};
+var stackRows=[], stackGeom={gutter:0,padL:12}, lastTG=null;
+
+var stackFont=11;
+function chipW(label,fs){
+  ctx.font='600 '+fs+'px "IBM Plex Mono", monospace';
+  return Math.round(ctx.measureText(label).width)+Math.round(fs*1.7);
+}
+function layoutStack(tg){
+  stackRows=[];
+  if(!(W>0&&H>0))return;
+  var chosen=NODES.filter(function(n){ return tg.chosen[n.stage]===n.id; });
+  if(!chosen.length)return;
+  var byLayer={};
+  chosen.forEach(function(n){ var L=LAYER_OF[n.stage]||"build"; (byLayer[L]=byLayer[L]||[]).push(n); });
+  var order=LAYERS.filter(function(L){ return byLayer[L.id]; });
+
+  var padL=12, padT=32, padB=42, gap=7;
+  var gutter=Math.max(50,Math.min(96,W*0.21));
+  stackGeom={gutter:gutter,padL:padL};
+  var base=padL+gutter, limit=W-10, span=Math.max(40,limit-base);
+
+  /* Fit the type to the busiest row instead of squeezing chips narrower than the
+     words inside them — a chip whose label overflows it is worse than a small one. */
+  stackFont=11;
+  while(stackFont>7.5){
+    var worst=0;
+    order.forEach(function(L){
+      var w=0; byLayer[L.id].forEach(function(n){ w+=chipW(n.label,stackFont)+gap; });
+      worst=Math.max(worst,w-gap);
+    });
+    if(worst<=span)break;
+    stackFont-=0.5;
+  }
+
+  var avail=Math.max(40,H-padT-padB);
+  var rowH=Math.max(30,Math.min(72,avail/order.length));   // 3 rows shouldn't huddle in the middle
+  var top=padT+Math.max(0,(avail-rowH*order.length)/2);
+
+  order.forEach(function(L,i){
+    var y=Math.round(top+rowH*i+rowH/2);
+    var list=byLayer[L.id];
+    stackRows.push({label:(LAYER_SHORT[L.id]||L.id),y:y});
+    var x=base;
+    list.forEach(function(n){ n.sw=chipW(n.label,stackFont); n.sx=x+n.sw/2; n.sy=y; x+=n.sw+gap; });
+    var right=x-gap;
+    if(right>limit){                      // last resort at the smallest type: pull the row in
+      var k=(limit-base)/(right-base);
+      list.forEach(function(n){ n.sw=n.sw*k; n.sx=base+(n.sx-base)*k; });
+    }
+  });
+}
+
 var raf=null, t0=performance.now();
-function animate(){ if(reduce){ NODES.forEach(function(n){n.hold=0;n.cur.a=n.tgt.a;n.cur.s=n.tgt.s;}); LINKS.forEach(function(l){l.cur=l.tgt||0;}); draw(); return;} if(raf)return; raf=requestAnimationFrame(tick); }
+function animate(){ if(reduce){ NODES.forEach(function(n){n.hold=0;n.cur.a=n.tgt.a;n.cur.s=n.tgt.s;n.cur.m=n.tgt.m;}); LINKS.forEach(function(l){l.cur=l.tgt||0;}); draw(); return;} if(raf)return; raf=requestAnimationFrame(tick); }
 function tick(now){
   var settled=true;
   NODES.forEach(function(n){
     if(n.hold&&now<n.hold){ settled=false; return; }   // waiting its turn in the reveal
-    n.cur.a+=(n.tgt.a-n.cur.a)*0.12; n.cur.s+=(n.tgt.s-n.cur.s)*0.12;
-    if(Math.abs(n.tgt.a-n.cur.a)>0.003||Math.abs(n.tgt.s-n.cur.s)>0.003)settled=false;
+    n.cur.a+=(n.tgt.a-n.cur.a)*0.12; n.cur.s+=(n.tgt.s-n.cur.s)*0.12; n.cur.m+=(n.tgt.m-n.cur.m)*0.10;
+    if(Math.abs(n.tgt.a-n.cur.a)>0.003||Math.abs(n.tgt.s-n.cur.s)>0.003||Math.abs(n.tgt.m-n.cur.m)>0.003)settled=false;
   });
   LINKS.forEach(function(l){ var tg=l.tgt||0; l.cur+=(tg-l.cur)*0.12; if(Math.abs(tg-l.cur)>0.003)settled=false; });
   draw(now);
@@ -1571,90 +1632,109 @@ function tick(now){
   if(!settled || breathing){ raf=requestAnimationFrame(tick); } else { raf=null; }
 }
 function hex(v){return css(v)||v}
+function rrect(x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y); ctx.closePath();
+}
 function draw(now){
   if(!(W>0&&H>0))return;          // not laid out yet, nothing to draw on
   now=now||performance.now();
   var cx=CENTER.x, cy=CENTER.y, men=1-clarity;
   ctx.clearRect(0,0,W,H);
 
-  // Menace: a cold red glow that traps the centre, plus a tightening cage ring, both fade as clarity rises.
-  if(men>0.02){
+  // how far the picture has become a stack rather than a knot
+  var morph=0, nc=0;
+  NODES.forEach(function(n){ if(n.role==="chosen"){ morph+=n.cur.m; nc++; } });
+  morph=nc?morph/nc:0;
+  var knot=1-morph;
+
+  // each node's drawn position: its place in the tangle, sliding to its place in the stack
+  NODES.forEach(function(n){
+    var m=n.cur.m;
+    n.x = (n.sx===undefined||m<=0) ? n.hx : n.hx+(n.sx-n.hx)*m;
+    n.y = (n.sy===undefined||m<=0) ? n.hy : n.hy+(n.sy-n.hy)*m;
+  });
+
+  // Menace: a cold glow trapping the centre, only while the knot is still the picture.
+  if(men>0.02&&knot>0.02){
     var g=ctx.createRadialGradient(cx,cy,8,cx,cy,RAD*1.1);
-    g.addColorStop(0,"rgba(120,104,92,"+(0.10*men)+")");
-    g.addColorStop(0.55,"rgba(96,86,84,"+(0.045*men)+")");
+    g.addColorStop(0,"rgba(120,104,92,"+(0.10*men*knot)+")");
+    g.addColorStop(0.55,"rgba(96,86,84,"+(0.045*men*knot)+")");
     g.addColorStop(1,"rgba(0,0,0,0)");
     ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
     ctx.beginPath(); ctx.arc(cx,cy,RAD*(0.40+0.05*Math.sin((now-t0)/1300)),0,6.2832);
-    ctx.strokeStyle="rgba(170,150,126,"+(0.10*men)+")"; ctx.lineWidth=1; ctx.stroke();
+    ctx.strokeStyle="rgba(170,150,126,"+(0.10*men*knot)+")"; ctx.lineWidth=1; ctx.stroke();
   }
 
-  // The entanglement: cross-links that criss-cross the blob, dense at the start, cut as you decide.
-  LINKS.forEach(function(l){
+  // The entanglement: dense at the start, cut as you decide, gone once it is a stack.
+  if(knot>0.02)LINKS.forEach(function(l){
     if(l.cur<=0.02)return;
     var A=NODES[l.a], B=NODES[l.b];
     var mx=(A.x+B.x)/2, my=(A.y+B.y)/2, nx=-(B.y-A.y), ny=(B.x-A.x), len=Math.hypot(nx,ny)||1;
     var wob=Math.sin((now-t0)/1050 + l.seed)*11*men;
     ctx.beginPath(); ctx.moveTo(A.x,A.y); ctx.quadraticCurveTo(mx+nx/len*wob,my+ny/len*wob,B.x,B.y);
-    ctx.strokeStyle="rgba(168,158,164,"+(0.20*l.cur)+")"; ctx.lineWidth=1.1; ctx.stroke();
+    ctx.strokeStyle="rgba(168,158,164,"+(0.20*l.cur*knot)+")"; ctx.lineWidth=1.1; ctx.stroke();
   });
 
-  // Spokes: centre → each option.
-  NODES.forEach(function(n){
-    var a=n.cur.a; if(a<=0.02)return;
+  if(knot>0.02)NODES.forEach(function(n){
+    var a=n.cur.a*knot; if(a<=0.02)return;
     var mx=(cx+n.x)/2, my=(cy+n.y)/2, nx=-(n.y-cy), ny=(n.x-cx), len=Math.hypot(nx,ny)||1;
-    var amp=(n.role==="chosen"?5:12)*men, wob=Math.sin((now-t0)/900 + n.seed)*amp;
+    var wob=Math.sin((now-t0)/900 + n.seed)*12*men;
     ctx.beginPath(); ctx.moveTo(cx,cy); ctx.quadraticCurveTo(mx+nx/len*wob,my+ny/len*wob,n.x,n.y);
-    if(n.role==="chosen"){ ctx.strokeStyle="rgba(232,147,74,"+(0.62*a)+")"; ctx.lineWidth=2.4; }
-    else { ctx.strokeStyle="rgba(150,168,190,"+(0.15*a)+")"; ctx.lineWidth=1; }
-    ctx.stroke();
+    ctx.strokeStyle="rgba(150,168,190,"+(0.10*a)+")"; ctx.lineWidth=1; ctx.stroke();
   });
 
-  // Nodes, labels only on the chosen ones, so the tangle stays an ominous unknown until it clears.
-  var labels=[];
-  ctx.font='600 12px "IBM Plex Mono", monospace';
+  // The rails the stack lands on: what each row of your stack is actually for.
+  if(morph>0.05&&stackRows.length){
+    var gx=stackGeom.padL+stackGeom.gutter;
+    ctx.textBaseline="middle";
+    stackRows.forEach(function(r){
+      ctx.beginPath(); ctx.moveTo(gx-6,r.y); ctx.lineTo(W-10,r.y);
+      ctx.strokeStyle="rgba(255,255,255,"+(0.05*morph)+")"; ctx.lineWidth=1; ctx.stroke();
+      ctx.font='600 9.5px "IBM Plex Mono", monospace'; ctx.textAlign="right";
+      ctx.fillStyle="rgba(159,176,194,"+(0.85*morph)+")";
+      ctx.fillText(r.label.toUpperCase(), gx-13, r.y);
+    });
+  }
+
+  // Nodes. A spared option stays a dim dot in the knot and fades out; a chosen one
+  // grows out of its dot into a labelled chip sitting on its layer's row.
   NODES.forEach(function(n){
     var a=n.cur.a; if(a<=0.02)return;
-    var R=(n.role==="chosen"?6.5:4.0)*n.cur.s;
-    ctx.beginPath(); ctx.arc(n.x,n.y,R,0,6.2832);
-    if(n.role==="chosen"){ ctx.fillStyle="rgba(232,147,74,"+a+")"; ctx.shadowColor="rgba(232,147,74,.65)"; ctx.shadowBlur=15; }
-    else { ctx.fillStyle="rgba(188,168,176,"+(0.62*a)+")"; ctx.shadowBlur=0; }
-    ctx.fill(); ctx.shadowBlur=0;
-    if(n.role==="chosen" && a>0.4){
-      // Side by available room, not just by which half of the canvas the dot sits in:
-      // a long name on a left-hand node used to run straight off the edge.
-      var w=ctx.measureText(n.label).width, pad=R+7, out=n.x>=cx?1:-1;
-      if(out<0 && n.x-pad-w<4 && n.x+pad+w<W-4) out=1;
-      else if(out>0 && n.x+pad+w>W-4 && n.x-pad-w>4) out=-1;
-      labels.push({n:n,a:a,R:R,out:out,ly:n.y});
+    var m=n.cur.m;
+    if(n.role!=="chosen"||m<0.02){
+      var R=(n.role==="chosen"?6.5:4.0)*n.cur.s;
+      ctx.beginPath(); ctx.arc(n.x,n.y,R,0,6.2832);
+      if(n.role==="chosen"){ ctx.fillStyle="rgba(232,147,74,"+a+")"; ctx.shadowColor="rgba(232,147,74,.65)"; ctx.shadowBlur=15; }
+      else { ctx.fillStyle="rgba(188,168,176,"+(0.62*a*knot)+")"; ctx.shadowBlur=0; }
+      ctx.fill(); ctx.shadowBlur=0;
+      return;
+    }
+    var ch=Math.round(stackFont*1.85);
+    var w=13+((n.sw||60)-13)*m, h=13+(ch-13)*m, x=n.x-w/2, y=n.y-h/2;
+    rrect(x,y,w,h,h/2);
+    ctx.fillStyle="rgba(232,147,74,"+(a*(0.55+0.45*m))+")";
+    ctx.shadowColor="rgba(232,147,74,.55)"; ctx.shadowBlur=14*m; ctx.fill(); ctx.shadowBlur=0;
+    if(m>0.45){
+      ctx.font='600 '+stackFont+'px "IBM Plex Mono", monospace'; ctx.textAlign="center"; ctx.textBaseline="middle";
+      ctx.fillStyle="rgba(255,246,238,"+(a*(m-0.45)/0.55)+")";
+      ctx.fillText(n.label, n.x, n.y+0.5);
     }
   });
 
-  // The canvas is half a column wide now, so fourteen lit names drawn at their true y
-  // collide into mush. Push them apart down each side, then draw a hair-line leader back
-  // to the node so a nudged label still reads as belonging to its dot.
-  [1,-1].forEach(function(side){
-    var col=labels.filter(function(l){return l.out===side;}).sort(function(p,q){return p.ly-q.ly;});
-    var GAP=15, i;
-    for(i=1;i<col.length;i++){ if(col[i].ly-col[i-1].ly<GAP) col[i].ly=col[i-1].ly+GAP; }
-    var over=col.length?col[col.length-1].ly-(H-22):0;
-    if(over>0){ for(i=0;i<col.length;i++) col[i].ly=Math.max(12,col[i].ly-over); }
-  });
-  labels.forEach(function(l){
-    var n=l.n, lx=n.x+l.out*(l.R+7);
-    if(Math.abs(l.ly-n.y)>2){
-      ctx.beginPath(); ctx.moveTo(n.x+l.out*(l.R+2),n.y); ctx.lineTo(lx,l.ly);
-      ctx.strokeStyle="rgba(232,147,74,"+(0.30*l.a)+")"; ctx.lineWidth=1; ctx.stroke();
-    }
-    ctx.textAlign=l.out>0?"left":"right"; ctx.textBaseline="middle";
-    ctx.fillStyle="rgba(255,236,214,"+l.a+")"; ctx.fillText(n.label, lx, l.ly);
-  });
-
-  // Centre "YOU", pulses uneasily while trapped, settles when the path is lit.
-  var pulse = (men>0.3 && !reduce) ? 1+0.06*Math.sin((now-t0)/440) : 1;
-  ctx.beginPath(); ctx.arc(cx,cy,15*pulse,0,6.2832);
-  ctx.fillStyle=hex("--warm"); ctx.shadowColor="rgba(217,119,46,.7)"; ctx.shadowBlur=18; ctx.fill(); ctx.shadowBlur=0;
-  ctx.fillStyle="#fff"; ctx.font='700 10px "IBM Plex Mono", monospace'; ctx.textAlign="center"; ctx.textBaseline="middle";
-  ctx.fillText("YOU", cx, cy);
+  // Centre "YOU": the thing the knot traps. It means nothing once the stack is drawn.
+  if(knot>0.03){
+    var pulse = (men>0.3 && !reduce) ? 1+0.06*Math.sin((now-t0)/440) : 1;
+    ctx.globalAlpha=knot;
+    ctx.beginPath(); ctx.arc(cx,cy,15*pulse,0,6.2832);
+    ctx.fillStyle=hex("--warm"); ctx.shadowColor="rgba(217,119,46,.7)"; ctx.shadowBlur=18; ctx.fill(); ctx.shadowBlur=0;
+    ctx.fillStyle="#fff"; ctx.font='700 10px "IBM Plex Mono", monospace'; ctx.textAlign="center"; ctx.textBaseline="middle";
+    ctx.fillText("YOU", cx, cy);
+    ctx.globalAlpha=1;
+  }
 }
 window.addEventListener("resize",resize);
 window.addEventListener("load",function(){ resize(); maybePlayArc(); });
@@ -1804,7 +1884,7 @@ function playArc(force){
   demoTimer=setTimeout(function(){
     if(!demoMode)return;
     applyTargets(graphTargets(dm.answers,r.graph),true);
-    $("#figcap").innerHTML='<b>'+Object.keys(r.graph.chosen).length+' tools chosen</b> for this example. The rest, greyed, is what you were spared.';
+    $("#figcap").innerHTML='<b>'+Object.keys(r.graph.chosen).length+' tools chosen</b> for this example, grouped by what each layer is for. Everything else has gone: choices nobody has to make.';
     var rp2=$("#replay"); if(rp2)rp2.hidden=false;
   },1500);
 }
@@ -1911,7 +1991,7 @@ function showResult(isShared){
     ? "Here's this stack. Everything faint behind it<br>is a decision they didn't have to make."
     : "Here's your stack. Everything faint behind it<br>is a decision you didn't have to make.";
   $("#lede").style.display="none";
-  $("#figcap").innerHTML='<b>'+Object.keys(r.graph.chosen).length+' tools chosen.</b> The rest, greyed, is what you were spared.';
+  $("#figcap").innerHTML='<b>'+Object.keys(r.graph.chosen).length+' tools chosen,</b> grouped by what each layer is for. Everything else has gone: choices you no longer have to make.';
   renderResults(r,isShared);
 }
 
