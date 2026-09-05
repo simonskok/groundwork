@@ -67,8 +67,23 @@
   .verdict h2{font-family:"Fraunces",Georgia,serif;font-optical-sizing:auto;font-weight:600;letter-spacing:-.015em}
   .verdict h2 i{font-style:italic;font-weight:500}
   .stage .lede{font-size:clamp(15px,2vw,18px);color:var(--muted);max-width:56ch;margin:16px 0 0}
-  .figurewrap{margin:22px 0 0;border-radius:18px;overflow:hidden;border:1px solid var(--line-strong);background:var(--canvas-bg);box-shadow:var(--shadow);position:relative}
-  canvas#web{display:block;width:100%;height:clamp(300px,46vw,460px)}
+  /* The tangle is the promise, so it sits beside the headline, not below the whole pitch. */
+  .herogrid{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(0,.88fr);gap:38px;align-items:center}
+  .herocopy{min-width:0}
+  /* the headline now lives in half the page, so it scales off the column, not the viewport */
+  @media (min-width:901px){
+    .herocopy h1{font-size:clamp(30px,3.05vw,41px)}
+    .herocopy .lede{font-size:16px;max-width:46ch}
+    .herocopy .creed{font-size:clamp(15px,1.55vw,18px);margin:18px 0 0}
+    .herocopy .reassure{margin:16px 0 0}
+    .herocopy .reassure span{font-size:12px;padding:5px 11px}
+  }
+  .figurewrap{margin:0;border-radius:18px;overflow:hidden;border:1px solid var(--line-strong);background:var(--canvas-bg);box-shadow:var(--shadow);position:relative}
+  canvas#web{display:block;width:100%;height:clamp(340px,34vw,470px)}
+  @media (max-width:900px){
+    .herogrid{grid-template-columns:1fr;gap:26px}
+    canvas#web{height:clamp(300px,58vw,400px)}
+  }
   .figcap{position:absolute;left:16px;bottom:12px;right:16px;font-family:"IBM Plex Mono",monospace;font-size:11px;color:#9fb0c2;letter-spacing:.04em;pointer-events:none;text-shadow:0 1px 8px rgba(0,0,0,.5)}
   .figcap b{color:#fff}
   .clearbar{position:absolute;top:14px;left:16px;right:16px;height:4px;border-radius:99px;background:rgba(255,255,255,.09);overflow:hidden}
@@ -257,7 +272,7 @@
   footer{padding:24px 0 54px;border-top:1px solid var(--line);color:var(--faint);font-family:"IBM Plex Mono",monospace;font-size:11.5px;line-height:1.7}
   .welcome{display:flex;gap:16px;align-items:flex-start;border:1px solid var(--warm-line);
     background:linear-gradient(165deg,var(--warm-soft),var(--surface) 70%);border-radius:18px;
-    padding:22px 26px;margin:0 0 28px;box-shadow:var(--shadow)}
+    padding:22px 26px;margin:30px 0 0;box-shadow:var(--shadow)}
   .welcome .wm-ico{font-size:26px;line-height:1;margin-top:2px}
   .welcome .wm-b{font-family:"Archivo",sans-serif;font-weight:700;font-size:16.5px;margin:0 0 7px;color:var(--ink);line-height:1.3}
   .welcome p{margin:0;font-size:14.5px;color:var(--muted);line-height:1.65;max-width:58ch}
@@ -282,27 +297,31 @@
 
 <main class="wrap">
   <section class="stage">
+    <div class="herogrid">
+      <div class="herocopy">
+        <span class="eyebrow" id="eyebrow">From watching to making</span>
+        <h1 id="headline">The idea in your head <i>deserves</i> to exist.<br>Let's build it, one honest step at a time.</h1>
+        <p class="lede" id="lede">Every idea begins as a tangle of decisions, and that tangle is where most people give up. Answer nine plain questions and watch it settle into a single, clear path, with the reasoning behind every step. No jargon unless you ask for it, and nothing you don't truly need.</p>
+        <p class="creed">Less feeding, more <b>building</b>. Less wasting, more <b>producing</b>. Less forgetting, more <b>remembering</b>.</p>
+        <div class="reassure">
+          <span>Plain language, jargon only if you ask</span>
+          <span>Recommends less, never upsells</span>
+          <span>Change any answer, anytime</span>
+          <span>Free to start</span>
+        </div>
+      </div>
+      <div class="figurewrap">
+        <div class="clearbar" aria-hidden="true"><i id="clearfill"></i></div>
+        <canvas id="web" role="img" aria-label="A tangle of tech-stack decisions that clears into a single chosen path as you answer."></canvas>
+        <div class="figcap" id="figcap"></div>
+      </div>
+    </div>
     <div class="welcome">
       <span class="wm-ico" aria-hidden="true">🌱</span>
       <div>
         <p class="wm-b">You've spent years watching other people make things. This is where you cross over.</p>
         <p>You don't need to be technical, and you don't need the right words. You need one honest guide, an idea worth building, and the courage to begin. You've already brought all three, or you wouldn't be here.</p>
       </div>
-    </div>
-    <span class="eyebrow" id="eyebrow">From watching to making</span>
-    <h1 id="headline">The idea in your head <i>deserves</i> to exist.<br>Let's build it, one honest step at a time.</h1>
-    <p class="lede" id="lede">Every idea begins as a tangle of decisions, and that tangle is where most people give up. Answer a few plain questions and watch it settle into a single, clear path, with the reasoning behind every step. No jargon unless you ask for it, and nothing you don't truly need.</p>
-    <p class="creed">Less feeding, more <b>building</b>. Less wasting, more <b>producing</b>. Less forgetting, more <b>remembering</b>.</p>
-    <div class="reassure">
-      <span>Plain language, jargon only if you ask</span>
-      <span>Recommends less, never upsells</span>
-      <span>Change any answer, anytime</span>
-      <span>Free to start</span>
-    </div>
-    <div class="figurewrap">
-      <div class="clearbar" aria-hidden="true"><i id="clearfill"></i></div>
-      <canvas id="web" role="img" aria-label="A tangle of tech-stack decisions that clears into a single chosen path as you answer."></canvas>
-      <div class="figcap" id="figcap"><b>34 options</b> across 13 decisions. Answer below, and the noise settles into one clear path.</div>
     </div>
   </section>
 
@@ -333,7 +352,7 @@
       <div class="opts" data-q="comfort" role="group" aria-label="Comfort"><button type="button" class="opt" data-v="nontech">Not technical</button><button type="button" class="opt" data-v="some">I can tinker</button><button type="button" class="opt" data-v="dev">I can code</button></div></div>
     <div class="qcard"><div class="qhead"><span class="qnum">09</span><span class="qtitle">What matters most right now?</span></div>
       <div class="opts" data-q="priority" role="group" aria-label="Priority"><button type="button" class="opt" data-v="speed">Launch fast</button><button type="button" class="opt" data-v="cost">Spend the least</button><button type="button" class="opt" data-v="scale">Build to scale</button></div></div>
-    <div class="cta"><button type="submit" id="go" disabled>Light up my path →</button><span class="hint" id="answered">0 / 8 answered</span></div>
+    <div class="cta"><button type="submit" id="go" disabled>Light up my path →</button><span class="hint" id="answered">0 / 9 answered</span></div>
     <p class="ctareassure">There are no wrong answers here. Nothing is charged and nothing gets installed, you'll just see your path, and you can change any answer whenever you like.</p>
   </form>
 
@@ -385,12 +404,18 @@ function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a
   var rnd=mulberry32(20260902);
   STAGES.forEach(function(st){st.opts.forEach(function(o){
     // scattered blob, not a tidy ring: golden-angle base + strong jitter + wide radius spread
-    var i=NODES.length, ang=i*2.39996323+(rnd()-0.5)*1.25, r=0.30+rnd()*0.66;
+    var i=NODES.length, ang=i*2.39996323+(rnd()-0.5)*1.25, r=0.26+rnd()*0.62;
     NODES.push({stage:st.key,id:o[0],label:o[1],ang:ang,r:r,cur:{a:0,s:0},tgt:{a:1,s:1},role:"pending",seed:rnd()*6.28});
   });});
-  // cross-links across the blob (co-prime hops guarantee long, crossing lines = a real tangle)
+  // cross-links across the blob (co-prime hops guarantee long, crossing lines = a real tangle).
+  // Three hop families, not two: with only 7/13 the "bundle" reads as a dot cloud with haze.
   var K=NODES.length;
-  for(var i=0;i<K;i++){ LINKS.push({a:i,b:(i+7)%K,cur:0,tgt:0,seed:rnd()*6.28}); if(i%2===0) LINKS.push({a:i,b:(i+13)%K,cur:0,tgt:0,seed:rnd()*6.28}); }
+  for(var i=0;i<K;i++){
+    LINKS.push({a:i,b:(i+7)%K,cur:0,tgt:0,seed:rnd()*6.28});
+    LINKS.push({a:i,b:(i+13)%K,cur:0,tgt:0,seed:rnd()*6.28});
+    if(i%2===0) LINKS.push({a:i,b:(i+19)%K,cur:0,tgt:0,seed:rnd()*6.28});
+    if(i%3===0) LINKS.push({a:i,b:(i+5)%K,cur:0,tgt:0,seed:rnd()*6.28});
+  }
 })();
 
 /* ---------- Profile: what the eight answers actually mean ------------------ */
@@ -1384,6 +1409,13 @@ function graphTargets(a, finalG){
     return out;
   }
 
+  // Before the first answer, nothing is settled. A few stages (repo, errors) have no
+  // trigger at all and would otherwise light up on a virgin page, which hands away the
+  // opening: you're supposed to land inside the whole undecided bundle, not next to two
+  // decisions someone already made for you.
+  var answered=REQUIRED.filter(function(k){return a[k];}).length;
+  if(answered===0)return out;
+
   var d=decide(a);
   STAGES.forEach(function(s){
     var k=s.key, dep=d.needs[k]||[];
@@ -1467,7 +1499,7 @@ function draw(now){
     var mx=(A.x+B.x)/2, my=(A.y+B.y)/2, nx=-(B.y-A.y), ny=(B.x-A.x), len=Math.hypot(nx,ny)||1;
     var wob=Math.sin((now-t0)/1050 + l.seed)*11*men;
     ctx.beginPath(); ctx.moveTo(A.x,A.y); ctx.quadraticCurveTo(mx+nx/len*wob,my+ny/len*wob,B.x,B.y);
-    ctx.strokeStyle="rgba(158,146,150,"+(0.13*l.cur)+")"; ctx.lineWidth=1; ctx.stroke();
+    ctx.strokeStyle="rgba(168,158,164,"+(0.20*l.cur)+")"; ctx.lineWidth=1.1; ctx.stroke();
   });
 
   // Spokes: centre → each option.
@@ -1477,23 +1509,41 @@ function draw(now){
     var amp=(n.role==="chosen"?5:12)*men, wob=Math.sin((now-t0)/900 + n.seed)*amp;
     ctx.beginPath(); ctx.moveTo(cx,cy); ctx.quadraticCurveTo(mx+nx/len*wob,my+ny/len*wob,n.x,n.y);
     if(n.role==="chosen"){ ctx.strokeStyle="rgba(232,147,74,"+(0.62*a)+")"; ctx.lineWidth=2.4; }
-    else { ctx.strokeStyle="rgba(150,168,190,"+(0.10*a)+")"; ctx.lineWidth=1; }
+    else { ctx.strokeStyle="rgba(150,168,190,"+(0.15*a)+")"; ctx.lineWidth=1; }
     ctx.stroke();
   });
 
   // Nodes, labels only on the chosen ones, so the tangle stays an ominous unknown until it clears.
+  var labels=[];
   NODES.forEach(function(n){
     var a=n.cur.a; if(a<=0.02)return;
-    var R=(n.role==="chosen"?6.5:3.6)*n.cur.s;
+    var R=(n.role==="chosen"?6.5:4.0)*n.cur.s;
     ctx.beginPath(); ctx.arc(n.x,n.y,R,0,6.2832);
     if(n.role==="chosen"){ ctx.fillStyle="rgba(232,147,74,"+a+")"; ctx.shadowColor="rgba(232,147,74,.65)"; ctx.shadowBlur=15; }
-    else { ctx.fillStyle="rgba(188,168,176,"+(0.5*a)+")"; ctx.shadowBlur=0; }
+    else { ctx.fillStyle="rgba(188,168,176,"+(0.62*a)+")"; ctx.shadowBlur=0; }
     ctx.fill(); ctx.shadowBlur=0;
-    if(n.role==="chosen" && a>0.4){
-      ctx.font='600 12px "IBM Plex Mono", monospace';
-      var out=n.x>=cx?1:-1; ctx.textAlign=out>0?"left":"right"; ctx.textBaseline="middle";
-      ctx.fillStyle="rgba(255,236,214,"+a+")"; ctx.fillText(n.label, n.x+out*(R+7), n.y);
+    if(n.role==="chosen" && a>0.4) labels.push({n:n,a:a,R:R,out:n.x>=cx?1:-1,ly:n.y});
+  });
+
+  // The canvas is half a column wide now, so fourteen lit names drawn at their true y
+  // collide into mush. Push them apart down each side, then draw a hair-line leader back
+  // to the node so a nudged label still reads as belonging to its dot.
+  ctx.font='600 12px "IBM Plex Mono", monospace';
+  [1,-1].forEach(function(side){
+    var col=labels.filter(function(l){return l.out===side;}).sort(function(p,q){return p.ly-q.ly;});
+    var GAP=15, i;
+    for(i=1;i<col.length;i++){ if(col[i].ly-col[i-1].ly<GAP) col[i].ly=col[i-1].ly+GAP; }
+    var over=col.length?col[col.length-1].ly-(H-22):0;
+    if(over>0){ for(i=0;i<col.length;i++) col[i].ly=Math.max(12,col[i].ly-over); }
+  });
+  labels.forEach(function(l){
+    var n=l.n, lx=n.x+l.out*(l.R+7);
+    if(Math.abs(l.ly-n.y)>2){
+      ctx.beginPath(); ctx.moveTo(n.x+l.out*(l.R+2),n.y); ctx.lineTo(lx,l.ly);
+      ctx.strokeStyle="rgba(232,147,74,"+(0.30*l.a)+")"; ctx.lineWidth=1; ctx.stroke();
     }
+    ctx.textAlign=l.out>0?"left":"right"; ctx.textBaseline="middle";
+    ctx.fillStyle="rgba(255,236,214,"+l.a+")"; ctx.fillText(n.label, lx, l.ly);
   });
 
   // Centre "YOU", pulses uneasily while trapped, settles when the path is lit.
@@ -1512,17 +1562,35 @@ document.querySelectorAll(".opts[data-q]").forEach(function(group){
     var btn=e.target.closest(".opt"); if(!btn)return;
     group.querySelectorAll(".opt").forEach(function(b){b.setAttribute("aria-pressed",b===btn?"true":"false")});
     answers[q]=btn.getAttribute("data-v");
-    var n=REQUIRED.filter(function(k){return answers[k]}).length;
-    $("#answered").textContent=n+" / 8 answered"; $("#go").disabled=n<8;
+    var n=syncProgress();
     applyTargets(graphTargets(answers,null));
     updateCaption(n);
   });
 });
+
+/* The form is nine cards: the idea in your own words, then eight choices. The count
+   says nine because that is what you can see. The submit gate stays on the eight
+   choices, so a blank idea never blocks anyone, it only sharpens the answer.
+   Returns the count of CHOICES made, which is what the canvas reasons about. */
+function syncProgress(){
+  var picked=REQUIRED.filter(function(k){return answers[k];}).length;
+  var el=$("#idea"), told=!!(el&&el.value.trim());
+  var hint=$("#answered");
+  if(hint){
+    hint.textContent = (picked===REQUIRED.length&&!told)
+      ? picked+" / 9 — ready. Question 1, in your words, sharpens it."
+      : (picked+(told?1:0))+" / 9 answered";
+  }
+  $("#go").disabled=picked<REQUIRED.length;
+  return picked;
+}
+
+/* Counts come from the registries, never typed by hand: the figure caption is a
+   promise about how much you were spared, and a stale number breaks it. */
 function updateCaption(n){
-  var decided=0; STAGES.forEach(function(s){}); // count via graphTargets
   var tg=graphTargets(answers,null),d=0; STAGES.forEach(function(s){if(tg.decided[s.key])d++;});
-  if(n===0) $("#figcap").innerHTML='<b>34 options</b> across 13 decisions. Answer below, and the noise settles into one clear path.';
-  else if(n<8) $("#figcap").innerHTML='<b>'+d+' of 13</b> decisions settling. The faded ones are choices you no longer have to make.';
+  if(n===0) $("#figcap").innerHTML='<b>'+NODES.length+' options</b> tangled across '+STAGES.length+' decisions. Answer below, and the knot settles into one clear path.';
+  else if(n<REQUIRED.length) $("#figcap").innerHTML='<b>'+d+' of '+STAGES.length+'</b> decisions settling. The faded ones are choices you no longer have to make.';
   else $("#figcap").innerHTML='Ready. Press <b>Light up my path</b> to see your whole stack.';
 }
 
@@ -1577,8 +1645,7 @@ function restoreAnswersUI(){
     var g=document.querySelector('.opts[data-q="'+q+'"]');
     if(g)g.querySelectorAll(".opt").forEach(function(b){b.setAttribute("aria-pressed",b.getAttribute("data-v")===v?"true":"false");});
   });
-  var n=REQUIRED.filter(function(k){return answers[k]}).length;
-  $("#answered").textContent=n+" / 8 answered"; $("#go").disabled=n<8;
+  syncProgress();
 }
 function initFromURL(){
   var params=new URLSearchParams(location.search);
@@ -1750,6 +1817,7 @@ function api(path,payload){
 var ideaEl=$("#idea");
 if(ideaEl)ideaEl.addEventListener("input",function(){
   var has=ideaEl.value.trim().length>=12;
+  syncProgress();                       // question 1 counts towards the nine
   var b=$("#tailorbtn"); if(b)b.hidden=!(has&&AI_ON);
   if(!has){var n=$("#tailornote"); if(n){n.textContent="";n.className="tailornote";}}
 });
@@ -2020,5 +2088,5 @@ function loadShared(id){
 
 /* init */
 resize();
-if(!initFromURL()){ applyTargets(graphTargets(answers,null)); }
+if(!initFromURL()){ applyTargets(graphTargets(answers,null)); updateCaption(syncProgress()); }
 </script>

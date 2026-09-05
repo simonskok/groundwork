@@ -3,7 +3,8 @@
 ## What this is
 
 Groundwork is a guided decision + guidance partner for non-technical and semi-technical
-founders. They describe what they're building in plain words, answer 8 plain questions, and
+founders. They answer nine plain questions — their idea in their own words, then eight
+choices; the submit gate is the eight, so a blank idea never blocks anyone — and
 Groundwork recommends an opinionated, **honest** tech stack — sometimes "you don't need a
 custom stack yet" — with reasoning for every pick, the options it beat, an honest cost, and a
 step-by-step plan. The signature is a live canvas: a tangled knot of options around a "YOU"
@@ -176,8 +177,13 @@ deploy, so ask before `git push` unless told otherwise in the moment.
   into the `build` layer and gets no counterfactual.
 - **Adding a tool = one entry in `TOOLS` + its id in `COMPETES`.** It then appears wherever
   it competes, automatically, in the compare table and the "options it beat" list.
-- **The figure-caption counts are hardcoded and now wrong** — `index.html:305`/`:1524` still
-  say "34 options across 13 decisions" against 16 stages / 42 nodes / 24 decisions.
+- **The figure-caption counts are derived, never typed.** `updateCaption()` reads
+  `NODES.length` / `STAGES.length`, so adding a tool or a canvas stage updates the caption
+  by itself. Don't reintroduce a literal there — a stale count in a product that promises an
+  honest number is the same broken promise as a stale price.
+- **Nothing may be lit before the first answer.** `repo` and `errors` have empty `needs`, so
+  they would settle on a virgin page; `graphTargets()` returns early at zero answers to keep
+  the landing state a whole undecided bundle. That opening *is* the "trapped" half of the arc.
 - **The `api/*` handlers are CommonJS** (`module.exports = handler`) with no framework.
   They read env **at call time**, not import time, so tests can set it dynamically.
 - **`VALID` (the 8 answers whitelist) is duplicated in `api/share.js` and `api/capture.js`.**
