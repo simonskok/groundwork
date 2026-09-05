@@ -47,7 +47,7 @@ both serverless handlers - no keys, no database, no network. They cover the degr
 contracts (405 on the wrong method, 501 with no key/`DATABASE_URL`, 400 on bad input) plus
 the prompt builder and JSON extraction in `api/tailor.js`. The live-API tests are skipped
 unless `RUN_LIVE=1` and a model key are set: `npm run test:live` (POSIX shells only - on
-Windows PowerShell use `$env:RUN_LIVE=1; node --test test/`).
+Windows PowerShell use `$env:RUN_LIVE=1; node --test`).
 
 ## Deploy - the edit → push → live loop
 

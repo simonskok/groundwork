@@ -11,7 +11,7 @@ There is no build step in this repo. `npm test` is the only automated check that
 
 1. If `node_modules/` is missing, run `npm install` first. The tests import
    `@neondatabase/serverless`, so they fail without it. This is expected on a fresh clone.
-2. Run `npm test` (which is `node --test test/`).
+2. Run `npm test` (which is `node --test`).
 3. To run one file while iterating: `node --test test/capture.test.js` or
    `node --test test/tailor.test.js`.
 4. Report per file: which suites passed, which failed, and how many were skipped.

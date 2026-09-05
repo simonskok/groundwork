@@ -28,7 +28,7 @@ Every way execution starts, in the whole system:
 | 11 | `POST /api/tailor` | `api/tailor.js:163` | HTTP |
 | 12 | `GET` / `POST /api/share` | `api/share.js:58` | HTTP |
 | 13 | `POST /api/capture` | `api/capture.js:80` | HTTP |
-| 14 | `npm test` | `package.json:13` | `node --test test/` |
+| 14 | `npm test` | `package.json:13` | `node --test` |
 
 There are no cron jobs, no webhooks, no build hooks, and no CLI.
 

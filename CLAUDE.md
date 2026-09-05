@@ -132,7 +132,7 @@ ENVIRONMENT.md      What a session needs to run: network level and env vars
 ## Gates (must pass before any change is done)
 
 - **Build: none.** There is no build, bundler, minifier or compile step. Don't invent one.
-- **Tests:** `npm install` once, then `npm test` (`node --test test/`). One file:
+- **Tests:** `npm install` once, then `npm test` (`node --test`). One file:
   `node --test test/capture.test.js`. Live model calls: `npm run test:live` (needs `RUN_LIVE=1`
   and a model key; POSIX shells only).
 - **CI: none.** No `.github/`, no workflow, no pre-commit hook. `npm test` run by hand is the
@@ -154,7 +154,7 @@ A change is not done until every gate that exists is green.
 
 ```bash
 npm install          # once - tests import @neondatabase/serverless
-npm test             # node --test test/ - 12 pass, 3 LIVE tests skip
+npm test             # node --test - 12 pass, 3 LIVE tests skip
 npm run test:live    # RUN_LIVE=1 + a model key; POSIX shells only (env-prefix syntax)
 ```
 
@@ -252,6 +252,10 @@ See **[CONTEXT.md](CONTEXT.md)**. Use those terms exactly.
   count in a product that promises an honest number is the same broken promise as a stale
   price. (`docs/CONVENTIONS.md` gotcha 13 still described the old, broken state; it has been
   corrected.)
+- **The test script itself was broken.** `npm test` ran `node --test test/`, and passing a
+  directory that way fails on Node 22 with `Cannot find module .../test` - zero tests run,
+  exit 1, while the docs said 12 pass. It is now bare `node --test`, which finds the same
+  files on every supported Node version. If a gate is documented, run it before trusting it.
 - **Reference docs going stale within days.** `docs/` was indexed at 2024 lines and
   `index.html` was 2431 five commits later. Line numbers in `docs/` are approximate by
   default now.

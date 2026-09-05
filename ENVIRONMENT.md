@@ -61,7 +61,7 @@ really there before assuming it:
 ```bash
 node -v            # must be >= 18
 bash scripts/cloud_setup.sh
-node --test test/*.test.js
+npm test
 ```
 
 If Node is missing, `cloud_setup.sh` says so and exits rather than pretending. If the npm

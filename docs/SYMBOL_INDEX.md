@@ -200,5 +200,5 @@ Result-card buttons wired inside `renderResults`: `#copylink` `:1696`, `#copysho
 
 | Command | Kind | Defined in | Purpose |
 |---|---|---|---|
-| `npm test` | command | package.json:13 | `node --test test/` - 12 pass, 3 skip |
-| `npm run test:live` | command | package.json:14 | `RUN_LIVE=1 node --test test/`; POSIX shells only |
+| `npm test` | command | package.json:13 | `node --test` - 12 pass, 3 skip |
+| `npm run test:live` | command | package.json:14 | `RUN_LIVE=1 node --test`; POSIX shells only |
