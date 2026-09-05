@@ -138,6 +138,10 @@
   }
   .figcap{position:absolute;left:16px;bottom:12px;right:16px;font-family:"IBM Plex Mono",monospace;font-size:11px;color:#9fb0c2;letter-spacing:.04em;pointer-events:none;text-shadow:0 1px 8px rgba(0,0,0,.5)}
   .figcap b{color:#fff}
+  .replay{position:absolute;top:26px;right:14px;font:inherit;font-family:"IBM Plex Mono",monospace;
+    font-size:11px;letter-spacing:.03em;color:#cfd9e4;background:rgba(255,255,255,.09);
+    border:1px solid rgba(255,255,255,.17);border-radius:999px;padding:5px 11px;cursor:pointer;transition:.16s}
+  .replay:hover{background:rgba(232,147,74,.9);border-color:transparent;color:#fff}
   .clearbar{position:absolute;top:14px;left:16px;right:16px;height:4px;border-radius:99px;background:rgba(255,255,255,.09);overflow:hidden}
   .clearbar i{display:block;height:100%;width:0;background:var(--warm);border-radius:99px;transition:width .5s cubic-bezier(.2,.7,.3,1)}
 
@@ -364,6 +368,7 @@
         <div class="clearbar" aria-hidden="true"><i id="clearfill"></i></div>
         <canvas id="web" role="img" aria-label="A tangle of tech-stack decisions that clears into a single chosen path."></canvas>
         <div class="figcap" id="figcap"></div>
+        <button type="button" class="replay" id="replay" hidden>↻ watch it again</button>
       </div>
     </div>
 
@@ -1505,16 +1510,21 @@ function graphTargets(a, finalG){
   return out;
 }
 
-function applyTargets(tg){
+function applyTargets(tg,stagger){
   var decidedCount=0, total=STAGES.length;
   STAGES.forEach(function(s){if(tg.decided[s.key])decidedCount++;});
   clarity=decidedCount/total;
+  /* Everything easing at once reads as a snap, not an untangling. On the big reveals
+     the chosen nodes light one after another, so the eye can follow a path being
+     drawn instead of a picture being swapped. */
+  var now=performance.now(), k=0, step=stagger?Math.max(55,Math.min(120,900/Math.max(1,Object.keys(tg.chosen).length))):0;
   NODES.forEach(function(n){
     var active=tg.active[n.stage]!==false;
     var chosen=tg.chosen[n.stage];
+    n.hold=0;
     if(!active){ n.role="pruned"; n.tgt={a:0.08,s:0.5}; }
     else if(chosen){
-      if(n.id===chosen){ n.role="chosen"; n.tgt={a:1,s:1.2}; }
+      if(n.id===chosen){ n.role="chosen"; n.tgt={a:1,s:1.2}; if(stagger)n.hold=now+(k++)*step; }
       else { n.role="pruned"; n.tgt={a:0.10,s:0.55}; }
     } else { n.role="pending"; n.tgt={a:0.82,s:0.95}; }
   });
@@ -1531,18 +1541,27 @@ function applyTargets(tg){
 /* ---------- Canvas rendering ---------------------------------------------- */
 var cv=$("#web"), ctx=cv.getContext("2d"), W=0,H=0,DPR=Math.min(2,window.devicePixelRatio||1),RAD=0;
 function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();}
+var everSized=false;
 function resize(){
   var r=cv.getBoundingClientRect(); W=r.width; H=r.height; DPR=Math.min(2,window.devicePixelRatio||1);
+  /* The canvas can be laid out at zero width at boot — a background tab, a hidden
+     pane, a deferred first layout. draw() bails on W<=0, and resize() used to run
+     only on window.resize, so the figure stayed blank forever: the whole payoff,
+     silently gone, for anyone who opened the link in a background tab. Now the
+     first time we get real dimensions we replay the arc, because until this
+     moment nobody could have seen it. */
+  if(W>0&&H>0&&!everSized){ everSized=true; setTimeout(maybePlayArc,60); }
   cv.width=W*DPR; cv.height=H*DPR; ctx.setTransform(DPR,0,0,DPR,0,0);
   CENTER={x:W/2,y:H/2}; RAD=Math.max(1,Math.min(W,H)*0.5 - 26);   // never negative: a 0-sized canvas threw out of createRadialGradient
   NODES.forEach(function(n){ n.x=CENTER.x+Math.cos(n.ang)*n.r*RAD; n.y=CENTER.y+Math.sin(n.ang)*n.r*RAD; });
   draw();
 }
 var raf=null, t0=performance.now();
-function animate(){ if(reduce){ NODES.forEach(function(n){n.cur.a=n.tgt.a;n.cur.s=n.tgt.s;}); LINKS.forEach(function(l){l.cur=l.tgt||0;}); draw(); return;} if(raf)return; raf=requestAnimationFrame(tick); }
+function animate(){ if(reduce){ NODES.forEach(function(n){n.hold=0;n.cur.a=n.tgt.a;n.cur.s=n.tgt.s;}); LINKS.forEach(function(l){l.cur=l.tgt||0;}); draw(); return;} if(raf)return; raf=requestAnimationFrame(tick); }
 function tick(now){
   var settled=true;
   NODES.forEach(function(n){
+    if(n.hold&&now<n.hold){ settled=false; return; }   // waiting its turn in the reveal
     n.cur.a+=(n.tgt.a-n.cur.a)*0.12; n.cur.s+=(n.tgt.s-n.cur.s)*0.12;
     if(Math.abs(n.tgt.a-n.cur.a)>0.003||Math.abs(n.tgt.s-n.cur.s)>0.003)settled=false;
   });
@@ -1638,6 +1657,23 @@ function draw(now){
   ctx.fillText("YOU", cx, cy);
 }
 window.addEventListener("resize",resize);
+window.addEventListener("load",function(){ resize(); maybePlayArc(); });
+document.addEventListener("visibilitychange",function(){ if(!document.hidden){ resize(); maybePlayArc(); } });
+window.addEventListener("scroll",maybePlayArc,{passive:true});
+/* Any layout change that gives the figure a size — not just a window resize — has to
+   reach the canvas, or it never recovers from being measured at zero. */
+if(window.ResizeObserver){
+  try{ new ResizeObserver(function(){resize();}).observe(cv.parentNode||cv); }catch(e){}
+}
+/* And if the figure is below the fold, the arc waits until it is actually on screen.
+   An animation nobody was looking at may as well not have run. */
+if(window.IntersectionObserver){
+  try{
+    new IntersectionObserver(function(es){
+      es.forEach(function(en){ if(en.isIntersecting)maybePlayArc(); });
+    },{threshold:0.4}).observe(cv.parentNode||cv);
+  }catch(e){}
+}
 
 /* ---------- Wiring --------------------------------------------------------- */
 document.querySelectorAll(".opts[data-q]").forEach(function(group){
@@ -1702,7 +1738,7 @@ var DEMOS=[
 ];
 var demoMode=true, demoAt=-1, demoTimer=null;
 
-function renderDemo(i){
+function renderDemo(i,force){
   var dm=DEMOS[i]; if(!dm)return;
   demoAt=i;
   var r=recommend(dm.answers, dm.idea);
@@ -1731,16 +1767,46 @@ function renderDemo(i){
       beat.alts.slice(0,2).map(function(x){return escHtml(x[0])+" — "+escHtml(x[1]);}).join(" ")
     : '<b>Every pick shows the options it beat, and why, against your goal.</b>';
 
-  // Play the arc: the whole knot, then this idea's path lit out of it.
+  if(demoMode){ if(force)playArc(true); else maybePlayArc(); }
+}
+
+/* The payoff, on demand. Holds the whole knot long enough to register as a problem,
+   then lights this example's path out of it one pick at a time. Called on first
+   render, when the canvas first gets a real size, when it first scrolls into view,
+   and from the replay button — because an arc that plays once, into a tab nobody is
+   looking at yet, is an arc the visitor never saw. */
+/* The arc is only worth playing when someone can actually watch it. Browsers pause
+   requestAnimationFrame in hidden and background tabs, so an arc "played" on load
+   into a backgrounded tab eases nowhere and is simply over by the time the visitor
+   arrives — the animation runs, and they see a finished picture. So it waits for a
+   visible document, a sized canvas, and the figure on screen, and fires once. */
+var arcPlayed=false;
+function maybePlayArc(){
+  if(arcPlayed||!demoMode||document.hidden||!(W>0&&H>0))return;
+  var box=(cv.parentNode||cv).getBoundingClientRect();
+  var vh=window.innerHeight||document.documentElement.clientHeight||0;
+  if(box.bottom<50||box.top>vh-50)return;      // not on screen yet
+  arcPlayed=true; playArc(true);
+}
+
+var arcAt=0;
+function playArc(force){
   if(!demoMode)return;
+  // load, first real size and first scroll-into-view can all land together; one arc, not
+  // three. A deliberate replay or a switch to another example always wins.
+  var t=performance.now(); if(force!==true&&t-arcAt<400)return; arcAt=t;
+  var dm=DEMOS[demoAt<0?0:demoAt]; if(!dm)return;
+  var r=recommend(dm.answers,dm.idea);
   if(demoTimer)clearTimeout(demoTimer);
   applyTargets(graphTargets({},null));
-  $("#figcap").innerHTML='<b>'+NODES.length+' options</b> tangled across '+STAGES.length+' decisions.';
+  $("#figcap").innerHTML='<b>'+NODES.length+' options</b> tangled across '+STAGES.length+' decisions. Every one of them a choice somebody has to make.';
+  var rp=$("#replay"); if(rp)rp.hidden=true;
   demoTimer=setTimeout(function(){
     if(!demoMode)return;
-    applyTargets(graphTargets(dm.answers,r.graph));
+    applyTargets(graphTargets(dm.answers,r.graph),true);
     $("#figcap").innerHTML='<b>'+Object.keys(r.graph.chosen).length+' tools chosen</b> for this example. The rest, greyed, is what you were spared.';
-  },780);
+    var rp2=$("#replay"); if(rp2)rp2.hidden=false;
+  },1500);
 }
 
 /* The moment the visitor answers anything, the canvas is theirs, not the demo's. */
@@ -1749,6 +1815,7 @@ function leaveDemo(){
   demoMode=false;
   if(demoTimer){clearTimeout(demoTimer);demoTimer=null;}
   var d=$("#demo"); if(d)d.classList.add("demo-done");
+  var rp=$("#replay"); if(rp)rp.hidden=true;
 }
 
 function initDemo(){
@@ -1758,8 +1825,10 @@ function initDemo(){
   }).join("");
   host.addEventListener("click",function(e){
     var b=e.target.closest(".demotab"); if(!b)return;
-    renderDemo(+b.getAttribute("data-i"));
+    renderDemo(+b.getAttribute("data-i"),true);   // a new example always redraws the canvas
   });
+  var rp=$("#replay");
+  if(rp)rp.addEventListener("click",function(){playArc(true);});
   var go=$("#demogo");
   if(go)go.addEventListener("click",function(){
     var t=$("#yourturn")||$("#form");
@@ -1836,7 +1905,7 @@ function initFromURL(){
 
 function showResult(isShared){
   var r=recommend(answers,$("#idea").value);
-  applyTargets(graphTargets(answers,r.graph));
+  applyTargets(graphTargets(answers,r.graph),true);   // their own reveal gets the staged arc too
   $("#eyebrow").textContent=isShared?"A shared stack":"Your path, lit";
   $("#headline").innerHTML=isShared
     ? "Here's this stack. Everything faint behind it<br>is a decision they didn't have to make."
@@ -2265,6 +2334,18 @@ function loadShared(id){
 
 /* init */
 resize();
+/* Belt and braces for the zero-width boot. ResizeObserver is throttled while a
+   document is hidden and a background tab may never fire one at all, so poll
+   briefly until the figure actually has a size, then stop. Costs nothing and it
+   is the difference between the signature animation playing and the visitor
+   staring at an empty black box. */
+(function settleCanvas(){
+  var tries=0;
+  var iv=setInterval(function(){
+    if(everSized||++tries>24){ clearInterval(iv); return; }
+    resize();
+  },250);
+})();
 if(!initFromURL()){ syncProgress(); initDemo(); }
 else { leaveDemo(); initDemo(); }
 </script>
