@@ -53,5 +53,17 @@
       "Bash(vercel env pull:*)",
       "Bash(vercel env:*)"
     ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR\"/scripts/cloud_setup.sh"
+          }
+        ]
+      }
+    ]
   }
 }
