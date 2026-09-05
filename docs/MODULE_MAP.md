@@ -6,6 +6,11 @@ script block is a sibling in one global scope, which means "public surface" = "e
 and the edges below are *call* edges, not import edges.
 
 Indexed 2026-09-04 against `index.html` @ 2024 lines, md5 `33c3da71…` (commit `3a1f721`).
+
+> **Stale as of 2026-09-05:** `index.html` has changed since that index and is now
+> **2432 lines**, md5 `2b5e20834bac0a2b0180ca64aed0b3d2`. The structure, the registries and
+> the reasoning below still hold; every `file:line` in this document is approximate.
+> `grep -n` to confirm a location before editing.
 **`grep -n` to confirm before editing.** Flat lookup: [SYMBOL_INDEX.md](SYMBOL_INDEX.md).
 
 ---

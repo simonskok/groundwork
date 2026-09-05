@@ -4,6 +4,11 @@ Indexed 2026-09-04 against `index.html` @ 2024 lines, md5 `33c3da71…` (commit 
 `grep -n` to confirm. Companion to [MODULE_MAP.md](MODULE_MAP.md) and
 [SYMBOL_INDEX.md](SYMBOL_INDEX.md).
 
+> **Stale as of 2026-09-05:** `index.html` has changed since that index and is now
+> **2432 lines**, md5 `2b5e20834bac0a2b0180ca64aed0b3d2`. The structure, the registries and
+> the reasoning below still hold; every `file:line` in this document is approximate.
+> `grep -n` to confirm a location before editing.
+
 ## Entry points
 
 Every way execution starts, in the whole system:

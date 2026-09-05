@@ -4,6 +4,11 @@ Inferred from the code as it actually is, not from ideals. Indexed 2026-09-04 ag
 `index.html` @ 2024 lines, md5 `33c3da71…` (commit `3a1f721`). Companion to
 [../CLAUDE.md](../CLAUDE.md) and [MODULE_MAP.md](MODULE_MAP.md).
 
+> **Stale as of 2026-09-05:** `index.html` has changed since that index and is now
+> **2432 lines**, md5 `2b5e20834bac0a2b0180ca64aed0b3d2`. The structure, the registries and
+> the reasoning below still hold; every `file:line` in this document is approximate.
+> `grep -n` to confirm a location before editing.
+
 ## Language and style
 
 **Frontend (`index.html`)** is deliberately old-school and must stay that way — it runs from
@@ -167,10 +172,12 @@ literals in `recommend()` and must never be built from user input.
     older than ~6 months and keep costs as shapes, not exact cents.
 12. **The canvas seed is fixed** (`mulberry32(20260902)`, `index.html:384`). The tangle is
     identical on every load by design. Changing the seed changes the product's signature image.
-13. **The figure-caption counts are hardcoded and are now wrong.** `index.html:305` and
-    `:1524` say "**34 options** across 13 decisions", and `:1525` says "N of **13**", but
-    `STAGES` holds **16 stages / 42 option nodes** and the engine decides **24**. They are
-    string literals, not derived from `STAGES.length`. Adding a stage does not update them.
+13. **The figure-caption counts are derived, and must stay derived.** They used to be
+    string literals ("34 options across 13 decisions") and drifted out of date as stages were
+    added. `updateCaption()` now reads `NODES.length` and `STAGES.length` directly, so adding
+    a tool or a canvas stage updates the caption by itself. Never reintroduce a literal there
+    - a stale count in a product that promises an honest number is the same broken promise as
+    a stale price.
 14. **Any new answer key must be added in five frontend places:** `answers` `:358`,
     `REQUIRED` `:359`, a `.opts[data-q]` block in the HTML, `CODE`/`CODE_ORDER` `:1530`, and
     `Q_VALUES`/`A_LABEL` `:924`/`:930` — plus the two backend `VALID` maps. Miss `Q_VALUES`
