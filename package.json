@@ -2,7 +2,7 @@
   "name": "groundwork",
   "version": "3.0.0",
   "private": true,
-  "description": "Groundwork — the honest tech-stack advisor. Static frontend + Vercel serverless functions.",
+  "description": "Groundwork - the honest tech-stack advisor. Static frontend + Vercel serverless functions.",
   "engines": {
     "node": ">=18"
   },
@@ -10,7 +10,7 @@
     "@neondatabase/serverless": "^0.10.4"
   },
   "scripts": {
-    "test": "node --test test/",
-    "test:live": "RUN_LIVE=1 node --test test/"
+    "test": "node --test",
+    "test:live": "RUN_LIVE=1 node --test"
   }
 }
