@@ -1,9 +1,9 @@
--- Groundwork — database schema (Neon Postgres).
+-- Groundwork - database schema (Neon Postgres).
 -- Already applied to the Neon `groundwork` project. Kept here as the source of
 -- truth / to re-create the DB elsewhere. Run in Neon Console → SQL Editor if needed.
 --
 -- Both serverless functions connect via DATABASE_URL (set automatically by the
--- Vercel↔Neon integration) using the database owner role, so no RLS is needed —
+-- Vercel↔Neon integration) using the database owner role, so no RLS is needed -
 -- the browser never touches the database directly, only /api/* does.
 
 -- Short share links (api/share.js)
@@ -14,7 +14,7 @@ create table if not exists public.stacks (
   created_at  timestamptz not null default now()
 );
 
--- Session capture — the data moat (api/capture.js)
+-- Session capture - the data moat (api/capture.js)
 -- Privacy: rows are anonymous. `email` is written only on explicit opt-in and is
 -- NEVER part of the aggregate you publish or sell. No IP / cookies stored.
 create table if not exists public.sessions (
@@ -23,7 +23,7 @@ create table if not exists public.sessions (
   stack       jsonb not null default '[]'::jsonb,  -- [{role, pick}] recommended
   verdict     text,                         -- the headline recommendation
   approach    text,                         -- "how to build it"
-  idea        text,                         -- raw idea text (NOT for resale — aggregate only)
+  idea        text,                         -- raw idea text (NOT for resale - aggregate only)
   source      text default 'web',           -- where the session came from
   email       text,                         -- opt-in only
   consent     boolean not null default false,

@@ -1,7 +1,7 @@
--- Groundwork — the aggregate "map" queries (Neon Postgres).
+-- Groundwork - the aggregate "map" queries (Neon Postgres).
 -- Run any of these in Neon Console → SQL Editor. This is the SELLABLE / SHAREABLE
 -- output: what founders are building and which tools win. It is built ONLY from
--- anonymous answers + stack — never from email or raw idea text. That is what
+-- anonymous answers + stack - never from email or raw idea text. That is what
 -- keeps it GDPR-clean and keeps the honesty brand intact. Do not export the
 -- `email` or `idea` columns into anything you publish or hand a vendor.
 
@@ -20,7 +20,7 @@ select answers->>'type' as app_kind, count(*) as n,
 from public.sessions
 group by 1 order by n desc;
 
--- 3. TOOL SHARE — the number a vendor pays for.
+-- 3. TOOL SHARE - the number a vendor pays for.
 --    "Across N sessions, tool X appears in Y% of recommended stacks."
 select
   s.pick as tool,
@@ -41,7 +41,7 @@ where s.role ilike '%database%'
 group by 1 order by n desc;
 
 -- 5. Segment cut: what a specific founder type is told to use.
---    (e.g. marketplaces that will charge money) — great for a targeted vendor pitch.
+--    (e.g. marketplaces that will charge money) - great for a targeted vendor pitch.
 select s.role, s.pick, count(*) as n
 from public.sessions sess,
      lateral jsonb_to_recordset(sess.stack) as s(role text, pick text)
@@ -64,6 +64,6 @@ select date_trunc('week', created_at)::date as week, count(*) as sessions
 from public.sessions
 group by 1 order by 1;
 
--- 8. Your opted-in list (PRIVATE — for you only, never resold).
+-- 8. Your opted-in list (PRIVATE - for you only, never resold).
 --    select email, email_at, answers->>'type' as building
 --    from public.sessions where consent and email is not null order by email_at desc;
