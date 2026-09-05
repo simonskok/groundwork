@@ -1,4 +1,4 @@
-# ARCHITECTURE.md — how Groundwork fits together
+# ARCHITECTURE.md - how Groundwork fits together
 
 Indexed 2026-09-04 against `index.html` @ 2024 lines, md5 `33c3da718f58b159565e3e9478f9b9f3`
 (commit `3a1f721`). Backend files unchanged since the first index.
@@ -17,8 +17,8 @@ Four layers, and only the first is required for the product to work:
 
 | Layer | Lives in | Responsibility | Degrades to |
 |---|---|---|---|
-| **Deterministic advisor** | `index.html` (JS 356–1503) | Profile the answers, decide 24 stages, generate reasoning, render the canvas | — (always works, offline, no keys) |
-| **Presentation / UI** | `index.html` (CSS 13–274, HTML 276–353, wiring 1506–1720) | Questionnaire, canvas animation, result rendering, share, modals | — |
+| **Deterministic advisor** | `index.html` (JS 356–1503) | Profile the answers, decide 24 stages, generate reasoning, render the canvas | - (always works, offline, no keys) |
+| **Presentation / UI** | `index.html` (CSS 13–274, HTML 276–353, wiring 1506–1720) | Questionnaire, canvas animation, result rendering, share, modals | - |
 | **AI tailoring** | `api/tailor.js` | Follow-up questions, idea-specific insights, build brief | 501 → button hides, `AI_ON=false` |
 | **Persistence** | `api/share.js`, `api/capture.js`, Neon | Short links, anonymous session capture, opt-in email | 501 → long `?p=` link; capture silently no-ops |
 
@@ -31,7 +31,7 @@ This is the single most confusing thing about the codebase, so it is stated up f
 
 | Registry | Size | Drives |
 |---|---|---|
-| `STAGES` `index.html:362` | **16** stages, 42 option nodes | The **canvas only** — the tentacles and nodes in the tangle |
+| `STAGES` `index.html:362` | **16** stages, 42 option nodes | The **canvas only** - the tentacles and nodes in the tangle |
 | `COMPETES` `index.html:779` | **26** stages | The full decision set: cards, compare tables, "options it beat" |
 | `decide()` `index.html:453` | **24** `set()` calls | Every stage that gets a pick |
 | `LAYER_OF` / `ROLE2STAGE` | 26 each | Every stage → its layer, and every card role → its stage |
@@ -39,19 +39,19 @@ This is the single most confusing thing about the codebase, so it is stated up f
 The 10 stages in `COMPETES` but not `STAGES` are `site`, `platform`, `cms`, `glue`,
 `support`, `marketing`, `forms`, `legal`, `uptime`, `backup`. They are **cards only, by
 design**: the canvas labels only *chosen* nodes, so extra tentacles crowd the tangle without
-adding feeling. `site` and `platform` are the two that `decide()` also skips — they are
+adding feeling. `site` and `platform` are the two that `decide()` also skips - they are
 verdict-level alternatives reached through `ROLE2STAGE`, not picks.
 
-Consequence: `clarity` in `applyTargets` `index.html:1399` is `decided / STAGES.length` —
+Consequence: `clarity` in `applyTargets` `index.html:1399` is `decided / STAGES.length` -
 progress is measured over the 16 canvas stages, not all 24 decided ones.
 
 ## Component dependency diagram
 
 ```mermaid
 graph TD
-  subgraph Browser["index.html — one file, no build"]
+  subgraph Browser["index.html - one file, no build"]
     UI[UI wiring<br/>form, canvas, results]
-    ENGINE["decide() — single source of truth"]
+    ENGINE["decide() - single source of truth"]
     REG["TOOLS 83 / COMPETES 26<br/>the encyclopedia"]
     REC["recommend()"]
     GRAPH["graphTargets() / draw()"]
@@ -100,7 +100,7 @@ the rules asked backwards and cannot drift from them.
 | Groq | `GROQ_API_KEY` | `api/tailor.js:15`, `:116` | 501 `not_configured` |
 | Provider choice | `AI_PROVIDER`, `TAILOR_MODEL` | `api/tailor.js:17-26`, `:117`, `:138` | Gemini preferred; default models |
 | Neon Postgres | `DATABASE_URL` (auto-set by the Vercel↔Neon integration; also accepts `POSTGRES_URL`, `DATABASE_URL_UNPOOLED`, `POSTGRES_URL_NON_POOLING`) | `api/share.js:14-17`, `api/capture.js:24-27` | 501; frontend falls back |
-| Google Fonts | `<link>` in the `index.html` head | — | system font stacks are declared as fallbacks |
+| Google Fonts | `<link>` in the `index.html` head | - | system font stacks are declared as fallbacks |
 
 Only runtime npm dependency: `@neondatabase/serverless` ^0.10.4. The frontend has **none**.
 

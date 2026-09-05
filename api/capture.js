@@ -1,7 +1,7 @@
-// Groundwork — session capture (Vercel serverless function, Neon Postgres).
+// Groundwork - session capture (Vercel serverless function, Neon Postgres).
 // Banks each completed run as a data point: what the founder is building, the
 // answers they gave, and the stack they were recommended. This is the raw
-// material for the aggregate "what founders build" map — the defensible asset.
+// material for the aggregate "what founders build" map - the defensible asset.
 //
 // Two phases, one endpoint (both upsert on the client-generated `sid`):
 //   POST { sid, answers, stack, verdict, approach, idea, source }   → insert the anonymous session
@@ -10,7 +10,7 @@
 // PRIVACY BY DESIGN:
 //   - Sessions are anonymous. No cookies, no IP, no fingerprint stored.
 //   - `email` is written ONLY when consent is true, and lives in its own column.
-//   - The sellable output is AGGREGATE (see db/insights.sql) — built from answers
+//   - The sellable output is AGGREGATE (see db/insights.sql) - built from answers
 //     + stack, never from email or raw idea text. Keep it that way.
 //
 // If DATABASE_URL is absent it returns 501 and the client no-ops silently.

@@ -1,4 +1,4 @@
-# CONVENTIONS.md — house rules, patterns, and footguns
+# CONVENTIONS.md - house rules, patterns, and footguns
 
 Inferred from the code as it actually is, not from ideals. Indexed 2026-09-04 against
 `index.html` @ 2024 lines, md5 `33c3da71…` (commit `3a1f721`). Companion to
@@ -11,14 +11,14 @@ Inferred from the code as it actually is, not from ideals. Indexed 2026-09-04 ag
 
 ## Language and style
 
-**Frontend (`index.html`)** is deliberately old-school and must stay that way — it runs from
+**Frontend (`index.html`)** is deliberately old-school and must stay that way - it runs from
 `file://` with no build step:
 
 - `var`, not `let`/`const`. `function(){}`, not arrow functions. No classes, no modules,
-  no `async`/`await` — promises use `.then()/.catch()`.
+  no `async`/`await` - promises use `.then()/.catch()`.
 - **Two exceptions already in the code:** `fetch` and `crypto.randomUUID()` (with a
   fallback). Don't add more without a fallback.
-- Everything is a global in one `<script>` block. There is no namespace object — a new
+- Everything is a global in one `<script>` block. There is no namespace object - a new
   top-level `var` is a new global. Check for a name collision before adding one.
 - Compact formatting: multiple statements per line, minimal whitespace. Match the density of
   the surrounding lines.
@@ -35,14 +35,14 @@ Inferred from the code as it actually is, not from ideals. Indexed 2026-09-04 ag
 ## Structural patterns
 
 - **One source of truth.** `decide()` decides; nothing else may re-derive a pick. If you need
-  a pick anywhere new, call `decide(answers)` and read from it — `renderSpinKit`
+  a pick anywhere new, call `decide(answers)` and read from it - `renderSpinKit`
   `index.html:1813` and `openCompare` `:1961` both do exactly this.
 - **Two registries, on purpose.** `STAGES` (16) is the **canvas**; `COMPETES` (26) is the
   full decision set. Adding a decision usually means `COMPETES` + `decide()` + `LAYER_OF` +
-  `ROLE2STAGE` + a `mod()` call — and *not* `STAGES`.
+  `ROLE2STAGE` + a `mod()` call - and *not* `STAGES`.
 - **Facts vs judgement are separated** in every `TOOLS` entry. Facts (`what`, `cost`,
   `lockin`) carry a `checked` date; judgement (`against`) is keyed by goal with `any` as the
-  fallback. Never write a why-not line into a card — put it in the registry so it appears
+  fallback. Never write a why-not line into a card - put it in the registry so it appears
   everywhere that tool competes.
 - **Registry-driven UI.** Adding a tool = an entry in `TOOLS` + its id in `COMPETES`. It then
   shows up in the compare table and every "options it beat" list automatically.
@@ -61,27 +61,27 @@ Inferred from the code as it actually is, not from ideals. Indexed 2026-09-04 ag
 
 ## Error handling
 
-**Server** — every handler is one `try/catch` returning JSON, never a thrown error:
+**Server** - every handler is one `try/catch` returning JSON, never a thrown error:
 
 | Status | Meaning | Example |
 |---|---|---|
 | 400 | Bad input, rejected before any I/O | `missing_idea`, `invalid_answers`, `consent_required` |
 | 404 | Row not found | `api/share.js:69` |
-| 405 | Wrong method — **always set `Allow` first** | `api/tailor.js:165` |
+| 405 | Wrong method - **always set `Allow` first** | `api/tailor.js:165` |
 | 501 | Feature not configured (no key / no DB) | `api/tailor.js:170`, `api/share.js:60` |
 | 502 | Upstream failed | `model_error`, `unparseable`, `fetch_failed`, `db_error` |
 
 `detail` is always truncated (`.slice(0, 200–400)`) so an upstream error can't leak a wall of
 text. Validation is **all-or-nothing**: one bad answer value rejects the whole payload.
 
-**Client** — the contract is *degrade invisibly*:
+**Client** - the contract is *degrade invisibly*:
 
 - Route everything through `api()` `index.html:1741`. It turns 404/501 into
   `Error{code:"off"}`; the caller then latches its feature flag off and hides the control.
 - Wrap enhancements at the call site: `try{ renderSpinKit(r); }catch(e){}` `:1702`,
   `try{ captureSession(r); }catch(e){}` `:1716`. A broken enhancement must never take the
   deterministic result down with it.
-- Network failures fall back to something that still works — short link → long link,
+- Network failures fall back to something that still works - short link → long link,
   clipboard API → hidden textarea, shared-link load → empty canvas.
 
 **Logging:** there is none, client or server. Don't add `console.log` to shipped code.
@@ -97,7 +97,7 @@ Three escapers exist and they are not interchangeable by intent:
 | `escAttr(s)` | `index.html:1739` | Attribute values (currently delegates to `escHtml`) |
 
 All escape `& < > "`. **Model output and user text must always pass through one of them.**
-`mdBold` `:1740` deliberately re-introduces `<b>` tags — it must only ever be applied *after*
+`mdBold` `:1740` deliberately re-introduces `<b>` tags - it must only ever be applied *after*
 `escHtml`, as at `:1799`. Engine-authored prose (verdicts, tips, plan steps, counterfactuals)
 contains intentional `<b>` markup and is inserted unescaped; that is why those strings are
 literals in `recommend()` and must never be built from user input.
@@ -109,11 +109,11 @@ literals in `recommend()` and must never be built from user input.
 - **Run all:** `npm test`. **Run one:** `node --test test/capture.test.js`.
 - **Live tests** are gated on `RUN_LIVE=1` plus a real key and use `{ skip: !LIVE }`, so the
   default run never touches the network. `npm run test:live` uses POSIX env-prefix syntax and
-  will not work in PowerShell — set the vars separately there.
+  will not work in PowerShell - set the vars separately there.
 - **Pattern:** every suite hand-rolls a `mockRes()` (chainable `status().json()`, plus
-  `setHeader`) and calls the exported handler directly — no server, no supertest. Env is
+  `setHeader`) and calls the exported handler directly - no server, no supertest. Env is
   saved and restored around each case (`withEnv` in `test/tailor.test.js:36`).
-- **Coverage gaps:** `api/share.js` has no tests, and **none of `index.html` is tested** — no
+- **Coverage gaps:** `api/share.js` has no tests, and **none of `index.html` is tested** - no
   `decide()`, no `recommend()`, no rendering.
 - **Sweeping the engine without a browser** is possible and worth doing after any change to
   `decide()`/`recommend()`. Extract the DOM-free region and drive it from Node:
@@ -128,8 +128,8 @@ literals in `recommend()` and must never be built from user input.
 
 ## Not to be hand-edited / regenerated
 
-- `package-lock.json` — regenerated by `npm install`.
-- `node_modules/` — gitignored.
+- `package-lock.json` - regenerated by `npm install`.
+- `node_modules/` - gitignored.
 - Nothing else is generated. There is no codegen, no bundler, no minifier, and `index.html`
   is genuinely hand-written despite its size.
 - `db/schema.sql` is hand-written but **already applied to the live Neon database**. Editing
@@ -137,7 +137,7 @@ literals in `recommend()` and must never be built from user input.
 
 ## Gotchas and footguns
 
-1. **`index.html` line numbers drift constantly.** It is one file under continuous edit — it
+1. **`index.html` line numbers drift constantly.** It is one file under continuous edit - it
    changed three times during the first indexing pass and grew 1850 → 2024 between passes.
    Always `grep -n` before editing at a line number.
 2. **`VALID` is duplicated** in `api/share.js:19` and `api/capture.js:29`, and the frontend
@@ -155,7 +155,7 @@ literals in `recommend()` and must never be built from user input.
 6. **A `mod()` role missing from `ROLE2STAGE`** silently gets `stage:""`, falls into the
    `build` layer, and loses its counterfactual and compare button. No error is thrown.
 7. **"Start here" must mean the minimum that gets you live.** With 26 stages it is easy to
-   badge everything `core` and produce a wall of "Start here" cards — the exact upsell this
+   badge everything `core` and produce a wall of "Start here" cards - the exact upsell this
    product refuses. Current sweep: mean 12.0 "now" cards, max 16. If the mean creeps much
    past ~12, demote something to `later`.
 8. **`cleanStack` caps the captured stack at 24** `api/capture.js:63`, and the verified
@@ -163,12 +163,12 @@ literals in `recommend()` and must never be built from user input.
    silently truncating the data moat for the heaviest profiles. Raise the cap in the same
    commit that adds the card.
 9. **`counterfactual()` re-enters `decide()` ~20 times per card**, so a single result runs
-   `decide` around 350 times. `decide` must stay pure and cheap — no fetches, no DOM reads.
+   `decide` around 350 times. `decide` must stay pure and cheap - no fetches, no DOM reads.
 10. **`renderResults` re-binds a click listener on `#results` every call**
     `index.html:1690`. Harmless while it renders once per page; adding a re-render path
     (live preview, "apply this change") will stack duplicate handlers.
 11. **`TOOLS` costs go stale.** `CHECKED` is `"2026-09"` across all 83 entries. In a product
-    whose promise is an honest cost, a stale price is a broken promise — re-check anything
+    whose promise is an honest cost, a stale price is a broken promise - re-check anything
     older than ~6 months and keep costs as shapes, not exact cents.
 12. **The canvas seed is fixed** (`mulberry32(20260902)`, `index.html:384`). The tangle is
     identical on every load by design. Changing the seed changes the product's signature image.
@@ -180,12 +180,12 @@ literals in `recommend()` and must never be built from user input.
     a stale price.
 14. **Any new answer key must be added in five frontend places:** `answers` `:358`,
     `REQUIRED` `:359`, a `.opts[data-q]` block in the HTML, `CODE`/`CODE_ORDER` `:1530`, and
-    `Q_VALUES`/`A_LABEL` `:924`/`:930` — plus the two backend `VALID` maps. Miss `Q_VALUES`
+    `Q_VALUES`/`A_LABEL` `:924`/`:930` - plus the two backend `VALID` maps. Miss `Q_VALUES`
     and counterfactuals silently stop considering that question.
 15. **`draw()` reads CSS custom properties every frame** via `css()`/`hex()`. That is what
-    makes the canvas theme-aware — don't hardcode a hex value in the canvas code.
+    makes the canvas theme-aware - don't hardcode a hex value in the canvas code.
 16. **Never export `sessions.email` or `sessions.idea`** into anything published, sold, or
     handed to a vendor. `db/insights.sql` is written to make the safe query the easy one.
 17. **`vercel dev` is the only way to exercise `/api` locally**, and it is not an npm script.
-    Opening `index.html` directly is the normal frontend workflow — the API calls 404 and the
+    Opening `index.html` directly is the normal frontend workflow - the API calls 404 and the
     site degrades exactly as it should.

@@ -375,7 +375,7 @@
     <!-- The proof, before we ask for anything. Real output from the real engine. -->
     <div class="demo" id="demo">
       <div class="demohead">
-        <span class="eyebrow">See it work first — no questions yet</span>
+        <span class="eyebrow">See it work first - no questions yet</span>
         <div class="demotabs" id="demotabs" role="tablist" aria-label="Example ideas"></div>
       </div>
       <div class="demopanel">
@@ -674,7 +674,7 @@ function decide(a){
            whose promise is an honest cost, a stale price is a broken promise,
            so every entry carries `checked` and costs are shapes, not exact
            numbers to the cent. Re-check anything older than ~6 months.
-   JUDGEMENT `against` — why this loses to the pick, keyed by what the founder
+   JUDGEMENT `against` - why this loses to the pick, keyed by what the founder
            said they care about. This is authored, it is the product, and no
            dataset will hand it to you.
 
@@ -1545,7 +1545,7 @@ function css(v){return getComputedStyle(document.documentElement).getPropertyVal
 var everSized=false;
 function resize(){
   var r=cv.getBoundingClientRect(); W=r.width; H=r.height; DPR=Math.min(2,window.devicePixelRatio||1);
-  /* The canvas can be laid out at zero width at boot — a background tab, a hidden
+  /* The canvas can be laid out at zero width at boot - a background tab, a hidden
      pane, a deferred first layout. draw() bails on W<=0, and resize() used to run
      only on window.resize, so the figure stayed blank forever. */
   if(W>0&&H>0&&!everSized){ everSized=true; setTimeout(maybePlayArc,60); }
@@ -1557,7 +1557,7 @@ function resize(){
 }
 
 /* ---------- The resolved layout: a stack you can actually read --------------
-   The tangle says how it feels. It cannot say what you got — a spray of dots
+   The tangle says how it feels. It cannot say what you got - a spray of dots
    with names scattered around it is decoration, and at fourteen picks it is an
    unreadable hairball. So a chosen node leaves the knot and takes its place in
    the layer it belongs to, as a labelled chip on a row. One picture then carries
@@ -1587,7 +1587,7 @@ function layoutStack(tg){
   var base=padL+gutter, limit=W-10, span=Math.max(40,limit-base);
 
   /* Fit the type to the busiest row instead of squeezing chips narrower than the
-     words inside them — a chip whose label overflows it is worse than a small one. */
+     words inside them - a chip whose label overflows it is worse than a small one. */
   stackFont=11;
   while(stackFont>7.5){
     var worst=0;
@@ -1740,7 +1740,7 @@ window.addEventListener("resize",resize);
 window.addEventListener("load",function(){ resize(); maybePlayArc(); });
 document.addEventListener("visibilitychange",function(){ if(!document.hidden){ resize(); maybePlayArc(); } });
 window.addEventListener("scroll",maybePlayArc,{passive:true});
-/* Any layout change that gives the figure a size — not just a window resize — has to
+/* Any layout change that gives the figure a size - not just a window resize - has to
    reach the canvas, or it never recovers from being measured at zero. */
 if(window.ResizeObserver){
   try{ new ResizeObserver(function(){resize();}).observe(cv.parentNode||cv); }catch(e){}
@@ -1779,7 +1779,7 @@ function syncProgress(){
   var hint=$("#answered");
   if(hint){
     hint.textContent = (picked===REQUIRED.length&&!told)
-      ? picked+" / 9 — ready. Question 1, in your words, sharpens it."
+      ? picked+" / 9 - ready. Question 1, in your words, sharpens it."
       : (picked+(told?1:0))+" / 9 answered";
   }
   $("#go").disabled=picked<REQUIRED.length;
@@ -1801,7 +1801,7 @@ function updateCaption(n){
    without the visitor lifting a finger. These are ANSWER SETS, not written
    copy: every word in the panel comes out of recommend(), so the demo cannot
    drift from what the product actually says. The first example exists to prove
-   the honesty claim in three seconds — its answer is "don't build a stack". */
+   the honesty claim in three seconds - its answer is "don't build a stack". */
 var DEMOS=[
   {tab:"A studio portfolio site",
    idea:"A portfolio site for my photography studio. Some galleries, an about page, and a way for people to enquire.",
@@ -1844,7 +1844,7 @@ function renderDemo(i,force){
   r.mods.forEach(function(m){ if(!beat && m.alts && m.alts.length>=2) beat=m; });
   $("#demobeat").innerHTML = beat
     ? '<b>Why '+escHtml(beat.pick)+' and not the rest:</b> '+
-      beat.alts.slice(0,2).map(function(x){return escHtml(x[0])+" — "+escHtml(x[1]);}).join(" ")
+      beat.alts.slice(0,2).map(function(x){return escHtml(x[0])+" - "+escHtml(x[1]);}).join(" ")
     : '<b>Every pick shows the options it beat, and why, against your goal.</b>';
 
   if(demoMode){ if(force)playArc(true); else maybePlayArc(); }
@@ -1853,12 +1853,12 @@ function renderDemo(i,force){
 /* The payoff, on demand. Holds the whole knot long enough to register as a problem,
    then lights this example's path out of it one pick at a time. Called on first
    render, when the canvas first gets a real size, when it first scrolls into view,
-   and from the replay button — because an arc that plays once, into a tab nobody is
+   and from the replay button - because an arc that plays once, into a tab nobody is
    looking at yet, is an arc the visitor never saw. */
 /* The arc is only worth playing when someone can actually watch it. Browsers pause
    requestAnimationFrame in hidden and background tabs, so an arc "played" on load
    into a backgrounded tab eases nowhere and is simply over by the time the visitor
-   arrives — the animation runs, and they see a finished picture. So it waits for a
+   arrives - the animation runs, and they see a finished picture. So it waits for a
    visible document, a sized canvas, and the figure on screen, and fires once. */
 var arcPlayed=false;
 function maybePlayArc(){
@@ -2032,7 +2032,7 @@ function renderResults(r,isShared){
       Object.keys(d.pick).forEach(function(st){
         var id=d.pick[st]; if(d.active[st]===false||!TOOLS[id])return;
         var w=TOOLS[id].weight||2, over=w>co.band.top;
-        out.push('<span class="wchip'+(over?' over':'')+'" title="'+esc(TOOLS[id].name)+' — weight '+w+' of 5">'+
+        out.push('<span class="wchip'+(over?' over':'')+'" title="'+esc(TOOLS[id].name)+' - weight '+w+' of 5">'+
           '<i style="--w:'+w+'"></i>'+esc(TOOLS[id].name)+'</span>');
       });
       return out.join("");

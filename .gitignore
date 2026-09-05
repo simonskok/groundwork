@@ -11,7 +11,7 @@ Thumbs.db
 .idea
 .vscode
 
-# Secrets — never commit a real env file (.env.example is the documented, blank one)
+# Secrets - never commit a real env file (.env.example is the documented, blank one)
 .env
 .env.*
 !.env.example

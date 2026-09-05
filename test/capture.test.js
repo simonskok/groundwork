@@ -1,4 +1,4 @@
-// Groundwork — offline tests for the session capture function (api/capture.js).
+// Groundwork - offline tests for the session capture function (api/capture.js).
 // These exercise the method + validation guards, which all return BEFORE any
 // network call, so no database and no DATABASE_URL are needed. Run: npm test
 

@@ -1,4 +1,4 @@
-// Groundwork — AI tailoring (Vercel serverless function).
+// Groundwork - AI tailoring (Vercel serverless function).
 // Calls a free LLM provider to (1) ask smart follow-ups, (2) give an idea-specific
 // read, (3) write a build brief. Provider-flexible: set EITHER key.
 //   - GEMINI_API_KEY → Google Gemini (free tier, no card) get: https://aistudio.google.com/app/apikey
@@ -29,7 +29,7 @@ const VOICE =
   "You are the reasoning layer of Groundwork, an honest tech-stack advisor for non-technical and " +
   "semi-technical founders. Voice: plain, human, concrete, warm, no jargon in plain sight. " +
   "Honesty is the product: be willing to say a founder needs LESS, not more. Never upsell complexity. " +
-  "You reply with ONLY valid JSON — no prose, no markdown fences.";
+  "You reply with ONLY valid JSON - no prose, no markdown fences.";
 
 function readBody(req) {
   return new Promise((resolve) => {
