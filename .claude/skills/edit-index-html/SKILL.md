@@ -1,6 +1,6 @@
 ---
 name: edit-index-html
-description: Safely change index.html, the single 2432-line frontend file that has no build step and no test coverage.
+description: Safely change index.html, the single 2431-line frontend file that has no build step and no test coverage.
 ---
 
 # edit-index-html

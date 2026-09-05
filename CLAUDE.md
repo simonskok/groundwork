@@ -214,8 +214,8 @@ with `file:line` -> **[docs/MODULE_MAP.md](docs/MODULE_MAP.md)**. Symbol lookup 
 **[docs/CONVENTIONS.md](docs/CONVENTIONS.md)**.
 
 All five were indexed 2026-09-04 against `index.html` @ 2024 lines, md5 `33c3da71...`
-(commit `3a1f721`). **`index.html` has changed since: it is now 2432 lines, md5
-`2b5e2083...`.** The structure, the registries and the reasoning in those docs still hold;
+(commit `3a1f721`). **`index.html` has changed since: it is now 2431 lines, md5
+`9be09861...`.** The structure, the registries and the reasoning in those docs still hold;
 every `file:line` in them is approximate. Always `grep -n` first.
 
 ## Domain language
@@ -253,13 +253,13 @@ See **[CONTEXT.md](CONTEXT.md)**. Use those terms exactly.
   price. (`docs/CONVENTIONS.md` gotcha 13 still described the old, broken state; it has been
   corrected.)
 - **Reference docs going stale within days.** `docs/` was indexed at 2024 lines and
-  `index.html` was 2432 five commits later. Line numbers in `docs/` are approximate by
+  `index.html` was 2431 five commits later. Line numbers in `docs/` are approximate by
   default now.
 
 ## Known pitfalls
 
-- **`index.html` line numbers drift constantly** - one file under active edit, 2432 lines,
-  md5 `2b5e2083...` as last checked. Always `grep -n` to confirm a location before editing.
+- **`index.html` line numbers drift constantly** - one file under active edit, 2431 lines,
+  md5 `9be09861...` as last checked. Always `grep -n` to confirm a location before editing.
 - **`needs` in `decide()` is the TRIGGER, not the full dependency set.** A stage settles on
   the canvas when the answer that makes it *meaningful* arrives, and the pick keeps
   sharpening after. Gate on full dependencies instead and nothing moves until the last

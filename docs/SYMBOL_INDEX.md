@@ -9,7 +9,7 @@ grep -n 'function decide' index.html
 ```
 
 > **Stale as of 2026-09-05:** `index.html` has changed since that index and is now
-> **2432 lines**, md5 `2b5e20834bac0a2b0180ca64aed0b3d2`. Every line number below is
+> **2431 lines**, md5 `9be0986189623d2fb7bbe28c575d0f17`. Every line number below is
 > approximate. The symbols themselves are still correct.
 
 Module names match the sections in [MODULE_MAP.md](MODULE_MAP.md).

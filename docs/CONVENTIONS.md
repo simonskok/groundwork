@@ -5,7 +5,7 @@ Inferred from the code as it actually is, not from ideals. Indexed 2026-09-04 ag
 [../CLAUDE.md](../CLAUDE.md) and [MODULE_MAP.md](MODULE_MAP.md).
 
 > **Stale as of 2026-09-05:** `index.html` has changed since that index and is now
-> **2432 lines**, md5 `2b5e20834bac0a2b0180ca64aed0b3d2`. The structure, the registries and
+> **2431 lines**, md5 `9be0986189623d2fb7bbe28c575d0f17`. The structure, the registries and
 > the reasoning below still hold; every `file:line` in this document is approximate.
 > `grep -n` to confirm a location before editing.
 
