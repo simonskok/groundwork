@@ -32,10 +32,16 @@
       "Bash(wc:*)",
       "Bash(ls:*)",
       "Bash(find:*)",
-      "Bash(md5sum:*)"
+      "Bash(md5sum:*)",
+      "Bash(git push -u origin claude/*)",
+      "Bash(git push origin claude/*)"
     ],
     "deny": [
-      "Bash(git push:*)",
+      "Bash(git push)",
+      "Bash(git push origin main:*)",
+      "Bash(git push * main)",
+      "Bash(git push --all:*)",
+      "Bash(git push origin HEAD:*)",
       "Bash(git push --force:*)",
       "Bash(git push -f:*)",
       "Bash(git rebase:*)",
@@ -46,10 +52,14 @@
       "Bash(git reflog delete:*)",
       "Bash(git update-ref -d:*)",
       "Read(./.env)",
-      "Read(./.env.*)",
+      "Read(./.env.local)",
+      "Read(./.env.*.local)",
+      "Read(./.env.development)",
+      "Read(./.env.preview)",
+      "Read(./.env.production)",
       "Read(./.vercel/**)",
-      "Bash(cat .env:*)",
-      "Bash(cat .env.*)",
+      "Bash(cat .env)",
+      "Bash(cat .env.local)",
       "Bash(vercel env pull:*)",
       "Bash(vercel env:*)"
     ]
