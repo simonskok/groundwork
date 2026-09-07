@@ -1,18 +1,15 @@
----
-description: Run every gate that exists and report per check.
----
+Run this repo's gates and report per check.
 
-Run Groundwork's gates and report the result of each one separately. Do not summarise them
-into a single pass or fail.
-
-1. **Build: none.** This repo has no build, bundler, minifier, typecheck or lint step.
-   Report it as "none - nothing to run", and do not invent a command.
-2. **Tests.** If `node_modules/` is missing, run `npm install` first, then run `npm test`.
-   Report per file (`test/capture.test.js`, `test/tailor.test.js`): passed, failed, skipped.
-   Skipped live tests are correct behaviour, not failures - they need `RUN_LIVE=1` and a
-   model key, via `npm run test:live`.
-3. **Coverage caveat.** State plainly that the suite covers `api/capture.js` and
-   `api/tailor.js` only, that `api/share.js` has no tests, and that no frontend code is
-   tested at all - so a green run says nothing about whether `index.html` works.
-
-If anything failed, show the real output. Do not describe a failure in your own words only.
+1. Run `node -v`. If it does not print v22, report the environment problem and continue
+   only if the version still satisfies >=18 - and say so in the report.
+2. Confirm `node_modules/@neondatabase/serverless` exists; if not, run `npm install`
+   first (the suites import it).
+3. If arguments name a file or area, run only the suite covering it
+   (mapping in .claude/skills/run-tests/SKILL.md). Otherwise run `npm test`.
+4. Report one line per suite: name, pass/fail/skip counts, and for failures the first
+   failing assertion verbatim. 3 skips in the default run are expected (live tests).
+5. Never run `npm run test:live` unless explicitly asked - it calls a real model API.
+6. Do not modify any file to make a test pass without stating what the test was
+   protecting and why the change is safe.
+7. Remember what has no coverage: api/share.js and all of index.html. A green run says
+   nothing about a frontend change.
