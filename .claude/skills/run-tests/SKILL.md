@@ -1,40 +1,47 @@
 ---
 name: run-tests
-description: Run Groundwork's test suite correctly and report what it does and does not cover.
+description: How to run this repo's gates, what covers what, and how to read results. Use before and after any api/ change.
 ---
 
-# run-tests
+# Run tests
 
-There is no build step in this repo. `npm test` is the only automated check that exists.
+Work is committed straight to main and a push deploys production, so the gates run
+locally, before the commit. That order is the whole safety model.
 
-## Steps
+## Requirements
 
-1. If `node_modules/` is missing, run `npm install` first. The tests import
-   `@neondatabase/serverless`, so they fail without it. This is expected on a fresh clone.
-2. Run `npm test` (which is `node --test`).
-3. To run one file while iterating: `node --test test/capture.test.js` or
-   `node --test test/tailor.test.js`.
-4. Report per file: which suites passed, which failed, and how many were skipped.
+- Node 22 in cloud sessions (owner decision; `package.json` floor is >=18). Check with
+  `node -v` first.
+- `npm install` once per environment - the suites import `@neondatabase/serverless`.
+- No database, no network, no keys needed for the default run.
 
-## What is skipped, and why that is correct
+## The gates
 
-Three tests are gated on `RUN_LIVE=1` plus a real model key and skip by default, so a normal
-run never touches the network. To include them: `npm run test:live`. That uses POSIX
-env-prefix syntax and will not work in PowerShell - set the variables separately there.
-A skipped live test is not a failure. Do not report it as one.
+| Command | Covers |
+|---|---|
+| `npm test` | everything: `node --test test/` (expected: 12 pass, 3 live tests skip) |
+| `node --test test/capture.test.js` | `api/capture.js` - method/validation guards |
+| `node --test test/tailor.test.js` | `api/tailor.js` - provider pick, JSON extraction, HTTP guards |
+| `npm run test:live` | optional: really calls the model API. Needs `RUN_LIVE=1` + a real key. Only when asked. |
 
-## What this does not cover - say so every time
+While iterating, run only the suite covering the file you changed. The expected pass
+count was last confirmed by a human on 2026-09-04; if your run disagrees, report the
+difference rather than assuming the doc is right.
 
-The suite covers `api/capture.js` and `api/tailor.js` only. `api/share.js` has no tests, and
-**no frontend code is tested at all** - not `decide()`, not `recommend()`, not any rendering.
-A green `npm test` says nothing about whether `index.html` still works.
+## What has no coverage (do not pretend otherwise)
 
-So after any frontend change, opening `index.html` in a browser and exercising the changed
-path by hand is part of the definition of done, not an optional extra.
+- `api/share.js` has no tests.
+- Nothing in `index.html` is tested - no `decide()`, no `recommend()`, no rendering.
+  A frontend change is verified by opening the page and looking, plus the headless
+  sweep for engine changes (docs/CONVENTIONS.md, Testing).
 
-## After a change to decide() or recommend()
+There is no lint, no typecheck, no build. Do not invent one, and do not report their
+absence as a failure.
 
-Sweep the engine headlessly as well. The recipe is in `docs/CONVENTIONS.md` under Testing:
-extract the DOM-free region of `index.html`, drive it from Node over all 2592 answer
-combinations, and check the card counts have not drifted from mean 17.7 / max 24 cards and
-mean 12.0 / max 16 "now" cards. A rising "now" mean means the product has started upselling.
+## Reading results
+
+- The suites hand-roll `mockRes()` and call handlers directly; env is saved and
+  restored per case. A test that fails after you hoisted an env read to module scope
+  is the contract working - env must be read at call time.
+- Live tests skip by design without `RUN_LIVE=1`; 3 skips in the default run are
+  expected, not a problem.

@@ -1,69 +1,54 @@
-# ENVIRONMENT.md - what a session needs to run
+# ENVIRONMENT.md - what a session needs
 
-Short version: **the default is nearly enough.** One dependency install, no build, and no
-secrets. Everything below is the detail behind that.
+## Toolchain
 
-## Network level
+- **Node 22** (owner decision 2026-09-07; `package.json` requires only >=18, but 22 is
+  what Vercel runs and what the sibling repos use). One-time step in the claude.ai/code
+  environment selector: pick a Node 22 base. The SessionStart hook verifies the version
+  and says so; it does not silently switch it.
+- Dependencies: `npm install` (one dependency, `@neondatabase/serverless`; the tests
+  import it, so install before testing). There is no lockfile-strict `npm ci`
+  requirement, but `npm ci` also works - `package-lock.json` is committed.
+- **No build step, no lint, no typecheck exist. Do not invent one.**
 
-| Needs network | For what |
-|---|---|
-| **Yes, once per session** | `npm ci` fetching `@neondatabase/serverless` and its 13 transitive packages from the npm registry. This is the only thing that must reach the internet. |
-| **No** | `npm test`. The suite calls the handlers directly with a hand-rolled mock response object. No server, no database, no model API. |
-| **No** | Editing anything. There is no build, no bundler, no linter and no typecheck. |
-| **Only if you ask for it** | `npm run test:live`, which calls the real Gemini or Groq API and needs `RUN_LIVE=1` plus a model key. Three tests, skipped by default. |
-| **Browser only** | Google Fonts, fetched by `index.html` at page load. If it is blocked the page still works; it falls back to system fonts. |
+## Network
 
-So: **a network level that allows the npm registry is enough.** Nothing in this repo needs
-access to Vercel, Neon, Google or Groq to build or to pass its tests. Deployment happens on
-Vercel from a push to GitHub, never from inside a session.
+- `registry.npmjs.org` - `npm install`. The default Trusted level covers it.
+- Nothing else is needed for the default gates: `npm test` makes no network calls and
+  needs no database.
+- `npm run test:live` calls the real model APIs (`generativelanguage.googleapis.com` for
+  Gemini, `api.groq.com` for Groq) and needs a real key in the environment. It is
+  optional and off by default; do not run it unless asked.
 
 ## Environment variables
 
-**None are required.** With every one of them unset, the site is the full deterministic
-advisor: each `/api` route returns 501 and the frontend hides that feature silently. That is
-the designed state, not a broken one.
+None required for development or tests. The app with zero env vars is the full
+deterministic advisor by design - a missing key is never the cause of a broken
+recommendation.
 
-| Variable | Needed for | Why | Where the value comes from |
-|---|---|---|---|
-| `DATABASE_URL` | `/api/share`, `/api/capture` | Neon Postgres holds the `stacks` table (short `?r=` links) and the `sessions` table (anonymous capture). Without it, short links fall back to long `?p=` links and the "Get the map" card hides itself. | Set automatically by the Vercel-Neon integration. You never paste it. |
-| `GEMINI_API_KEY` | `/api/tailor` | The default AI provider, for follow-up questions, the idea-specific read, and the build brief. | https://aistudio.google.com/app/apikey - free tier, no card. |
-| `GROQ_API_KEY` | `/api/tailor` | The alternative AI provider. Either key is enough; Gemini wins if both are set. | https://console.groq.com/keys |
-| `AI_PROVIDER` | optional | Forces `"gemini"` or `"groq"` when both keys exist. | you |
-| `TAILOR_MODEL` | optional | Model override. | you |
-| `RUN_LIVE` | optional, tests only | Set to `1` to un-skip the three tests that call a real model API. | you |
+The real values live in exactly one place: Vercel, project `groundwork`, Settings,
+Environment Variables (see CLAUDE.md "Credentials"). Never print, commit, or copy them
+into the repo. `.env.example` documents the names with blank values:
+`GEMINI_API_KEY` / `GROQ_API_KEY` (AI layer), `AI_PROVIDER`, `TAILOR_MODEL` (optional),
+`DATABASE_URL` (Neon, set automatically by the Vercel integration).
 
-Also accepted for the database, in this order: `DATABASE_URL`, `POSTGRES_URL`,
-`DATABASE_URL_UNPOOLED`, `POSTGRES_URL_NON_POOLING`.
+If a Neon MCP connection is attached to a session it is typically read-only and will
+not hand out a connection string; that is expected, not a failure.
 
-**The real values live in exactly one place: Vercel -> the `groundwork` project -> Settings ->
-Environment Variables.** Nothing is committed here. `.env.example` lists the names with blank
-values as documentation and nothing else. The functions read `process.env` at call time,
-server-side, so no key ever reaches the browser and nothing is baked in at build time -
-there is no build.
+## Known snags
 
-To pull the real values onto a machine for `vercel dev`: `vercel env pull .env.local`. That
-file is gitignored. Never commit it.
+- A selected environment sometimes does not apply to a new session. Do not trust the
+  selector: first act of a session is `node -v` (expect v22) and `npm test` (expect
+  12 pass, 3 skips). Fix the environment before trusting anything else.
+- `npm run test:live` uses POSIX env-prefix syntax and fails on PowerShell; in cloud
+  sessions (Linux) this does not bite.
+- `vercel dev` is the only way to exercise `/api` locally and the Vercel CLI is not
+  installed by default and not a package.json script. Opening `index.html` without it is
+  the normal workflow: the API calls fail and the site degrades exactly as designed.
 
-## What is automatic, and the one thing you do by hand
+## What is automatic vs one-time
 
-**Automatic.** `scripts/cloud_setup.sh` runs as a SessionStart hook (wired in
-`.claude/settings.json`). It checks Node is present and at least 18, then installs from the
-lockfile with `npm ci`. It is safe to re-run: a second run sees `node_modules` and does
-nothing. It installs the toolchain and stops there, because there is nothing to build.
-
-**Your one-time step.** In claude.ai/code, pick an environment for this repo in the
-environment selector, with a network level that allows the npm registry. That is it.
-
-**The warning that matters.** A selected environment does not always actually apply. Do not
-trust the selector - the first session in a new environment should confirm the toolchain is
-really there before assuming it:
-
-```bash
-node -v            # must be >= 18
-bash scripts/cloud_setup.sh
-npm test
-```
-
-If Node is missing, `cloud_setup.sh` says so and exits rather than pretending. If the npm
-registry is unreachable, `npm ci` fails loudly. Either way you know within seconds, instead
-of discovering it halfway through a change.
+- Automatic, committed: the SessionStart hook in `.claude/settings.json` runs
+  `scripts/cloud_setup.sh` (version check + `npm install`) on every session start.
+- One-time, manual: choosing the Node 22 base in the claude.ai/code environment
+  selector. The default Trusted network level is enough.
