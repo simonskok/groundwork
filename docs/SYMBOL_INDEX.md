@@ -1,16 +1,20 @@
-# SYMBOL_INDEX.md — flat lookup
+# SYMBOL_INDEX.md - flat lookup
 
 Sorted alphabetically. Indexed 2026-09-04 against `index.html` @ 2024 lines, md5
 `33c3da718f58b159565e3e9478f9b9f3` (commit `3a1f721`). Line numbers **drift with every edit**
-— confirm with:
+- confirm with:
 
 ```bash
 grep -n 'function decide' index.html
 ```
 
+> **Stale as of 2026-09-05:** `index.html` has changed since that index and is now
+> **2431 lines**, md5 `9be0986189623d2fb7bbe28c575d0f17`. Every line number below is
+> approximate. The symbols themselves are still correct.
+
 Module names match the sections in [MODULE_MAP.md](MODULE_MAP.md).
 
-## Frontend — `index.html`
+## Frontend - `index.html`
 
 | Symbol | Kind | File:Line | Module | One-line purpose |
 |---|---|---|---|---|
@@ -105,8 +109,8 @@ Module names match the sections in [MODULE_MAP.md](MODULE_MAP.md).
 |---|---|---|---|---|
 | `repo` | `:458` | yes | build | Code home |
 | `build` | `:462` | yes | build | Build with |
-| `site` | — | no | build | Site |
-| `platform` | — | no | build | The app itself |
+| `site` | - | no | build | Site |
+| `platform` | - | no | build | The app itself |
 | `front` | `:467` | yes | live | Frontend host |
 | `compute` | `:471` | yes | live | Engine host / Backend |
 | `dns` | `:553` | yes | live | Domain + DNS |
@@ -141,23 +145,23 @@ Module names match the sections in [MODULE_MAP.md](MODULE_MAP.md).
 | tailor click | event handler | index.html:1756 | `#tailorbtn` | Fetch AI follow-ups |
 | map submit | event handler | index.html:1704 | `#mapform` | Email opt-in → phase-2 capture |
 | window resize | event handler | index.html:1506 | `window` | `resize()` |
-| init | entry point | index.html:2022–2023 | — | `resize()`, then `initFromURL()` or an empty canvas |
+| init | entry point | index.html:2022–2023 | - | `resize()`, then `initFromURL()` or an empty canvas |
 
 Result-card buttons wired inside `renderResults`: `#copylink` `:1696`, `#copyshort` `:1697`,
 `#copysum` `:1698`, `#startmine` `:1699`, `#again` `:1700`, `#tweak` `:1701`; plus
 `#copyenv` `:1941` and `#briefbtn` `:1942` inside `renderSpinKit`.
 
-## Backend — HTTP routes
+## Backend - HTTP routes
 
 | Route | Kind | Handler File:Line | Purpose |
 |---|---|---|---|
 | `POST /api/tailor` | route | api/tailor.js:163 | AI follow-ups / insights / build brief. 501 if no key |
 | `GET /api/share?id=` | route | api/share.js:65 | Resolve a short id → `{answers, idea}` |
 | `POST /api/share` | route | api/share.js:74 | Create a short id from answers + idea |
-| `POST /api/capture` | route | api/capture.js:95 | Phase 2 — attach an opted-in email to a session |
-| `POST /api/capture` | route | api/capture.js:109 | Phase 1 — anonymous session record |
+| `POST /api/capture` | route | api/capture.js:95 | Phase 2 - attach an opted-in email to a session |
+| `POST /api/capture` | route | api/capture.js:109 | Phase 1 - anonymous session record |
 
-## Backend — symbols
+## Backend - symbols
 
 | Symbol | Kind | File:Line | Module | One-line purpose |
 |---|---|---|---|---|
@@ -196,5 +200,5 @@ Result-card buttons wired inside `renderResults`: `#copylink` `:1696`, `#copysho
 
 | Command | Kind | Defined in | Purpose |
 |---|---|---|---|
-| `npm test` | command | package.json:13 | `node --test test/` — 12 pass, 3 skip |
-| `npm run test:live` | command | package.json:14 | `RUN_LIVE=1 node --test test/`; POSIX shells only |
+| `npm test` | command | package.json:13 | `node --test` - 12 pass, 3 skip |
+| `npm run test:live` | command | package.json:14 | `RUN_LIVE=1 node --test`; POSIX shells only |

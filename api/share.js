@@ -1,4 +1,4 @@
-// Groundwork — short share links (Vercel serverless function, Neon Postgres).
+// Groundwork - short share links (Vercel serverless function, Neon Postgres).
 // POST { answers, idea }  -> { id }             saves a stack, returns a short id
 // GET  ?id=<id>           -> { answers, idea }   resolves a short id
 // If DATABASE_URL is absent it returns 501 and the site falls back to the

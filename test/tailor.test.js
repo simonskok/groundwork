@@ -1,11 +1,11 @@
-// Groundwork — test suite for the AI tailoring function (api/tailor.js).
+// Groundwork - test suite for the AI tailoring function (api/tailor.js).
 // Zero dependencies. Uses Node's built-in test runner (Node >= 18).
 //
-//   Offline (no key, no network — pure logic + HTTP guards):
+//   Offline (no key, no network - pure logic + HTTP guards):
 //     node --test test/tailor.test.js
 //     npm test
 //
-//   Live smoke test (really calls the provider — costs a few free-tier tokens):
+//   Live smoke test (really calls the provider - costs a few free-tier tokens):
 //     RUN_LIVE=1 GEMINI_API_KEY=AIza... node --test test/tailor.test.js
 //     RUN_LIVE=1 GROQ_API_KEY=gsk_...  node --test test/tailor.test.js
 //   RUN_LIVE=1 alone auto-uses whichever key is in the environment.
