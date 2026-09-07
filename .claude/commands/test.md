@@ -11,5 +11,7 @@ Run this repo's gates and report per check.
 5. Never run `npm run test:live` unless explicitly asked - it calls a real model API.
 6. Do not modify any file to make a test pass without stating what the test was
    protecting and why the change is safe.
-7. Remember what has no coverage: api/share.js and all of index.html. A green run says
-   nothing about a frontend change.
+7. If the change touched the engine region of index.html, also run `npm run sweep` and
+   report its numbers; it exits non-zero on a broken invariant.
+8. Remember what has no coverage: api/share.js, and all of index.html outside the engine
+   region the sweep reads. A green `npm test` says nothing about a frontend change.

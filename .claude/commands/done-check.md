@@ -3,8 +3,8 @@ each item; fail closed - if an item cannot be verified, say so rather than assum
 it passes.
 
 1. Gates: the suite covering every touched `api/` file is green (`npm test` when in
-   doubt). If `decide()` or `recommend()` changed, the headless sweep was run and its
-   numbers reported.
+   doubt). If anything between `SWEEP-START` and `SWEEP-END` in `index.html` changed,
+   `npm run sweep` was run, exited 0, and its numbers are in the report.
 2. Frontend: if `index.html` changed, state explicitly that it was viewed in a browser
    (or that it was not, as a failure) - it has no test coverage.
 3. Contract sync: any change to answers/options updated all three VALID copies; any new

@@ -34,8 +34,9 @@ affiliate revenue → premium templates.
 ## How to run
 
 ```bash
-npm install          # once — tests import @neondatabase/serverless
-npm test             # node --test test/ — 12 pass, 3 LIVE tests skip. VERIFIED.
+npm install          # once - tests import @neondatabase/serverless
+npm test             # node --test test/ - 12 pass, 3 LIVE tests skip. VERIFIED 2026-09-07.
+npm run sweep        # the headless engine sweep - the only check covering index.html
 npm run test:live    # RUN_LIVE=1 + a model key; POSIX shells only (env-prefix syntax)
 ```
 
@@ -43,8 +44,11 @@ npm run test:live    # RUN_LIVE=1 + a model key; POSIX shells only (env-prefix s
   `/api/*` calls fail and the site degrades to the deterministic advisor by design.
 - **Full local run incl. `/api`:** `vercel dev` (serves at :3000). UNVERIFIED — needs the
   Vercel CLI installed; not a package.json script.
-- **Sweep the engine headlessly** after any `decide()`/`recommend()` change — see the recipe
-  in `docs/CONVENTIONS.md` (Testing). Current: 2592 combinations, mean 17.7 cards, max 24.
+- **Sweep the engine headlessly** after any change to `decide()`, `recommend()`, `TOOLS`,
+  `COMPETES`, `ROLE2STAGE` or `LAYER_OF`: `npm run sweep`. It reads the DOM-free region of
+  `index.html` between the `SWEEP-START`/`SWEEP-END` markers, runs every legal answer
+  combination with no browser, and exits non-zero on a broken invariant. Verified
+  2026-09-07: 2592 combinations, mean 17.70 cards, min 8, max 24, mean 11.97 "now", max 16.
 - **No lint, typecheck, or build step exists.** Don't invent one.
 
 ## Credentials — where they actually are
@@ -87,13 +91,16 @@ hand out a connection string; take `DATABASE_URL` from the Vercel or Neon dashbo
 ## Where things live
 
 ```
-index.html          The entire frontend: CSS 13-345, HTML 346-455, JS 456-2431
+index.html          The entire frontend: CSS 13-345, HTML 346-455, JS 456-2436.
+                    SWEEP-START 457 / SWEEP-END 1481 bracket the DOM-free engine
 api/tailor.js       AI layer — Gemini default / Groq fallback. 3 stages: followups/insights/brief
 api/share.js        Short share links (?r=) — Neon-backed. GET resolves, POST creates
 api/capture.js      Anonymous session capture (the data moat) + opt-in email. Two phases
 db/schema.sql       public.stacks + public.sessions. Already applied to Neon
 db/insights.sql     The aggregate "map" queries — the sellable output
 test/               node:test suites for tailor.js and capture.js. No network, no DB
+scripts/sweep.js    The headless engine sweep (`npm run sweep`). Gates index.html
+scripts/cloud_setup.sh  SessionStart hook: git author, Node check, npm install
 docs/               The generated reference index (below). Re-generate after big changes
 vercel.json         cleanUrls + security headers. Zero-config routing otherwise
 ```
@@ -109,9 +116,9 @@ with `file:line` → **[docs/MODULE_MAP.md](docs/MODULE_MAP.md)**. Symbol lookup
 All five were re-indexed 2026-09-04 against `index.html` @ 2024 lines, md5 `33c3da71…`
 (commit `3a1f721`), including the 8 new stages, 2 new layers and 28 new tools.
 
-**The index is currently STALE.** `index.html` has since grown to 2431 lines
-(md5 `2b5e2083…`), so every `index.html` line number in the five docs (and some in this
-file's own history) may be off. Structure, symbol names and rationale are still right;
+**The index is currently STALE.** `index.html` is now 2436 lines (md5 `148c6de4…`,
+measured 2026-09-07), so every `index.html` line number in the five docs (and some in this
+file's own history) is off. Structure, symbol names and rationale are still right;
 positions are not. Treat the docs as a map of what exists, `grep -n` as the only source
 of where it is, and re-generate the index at the next big `index.html` change. One known
 content fix since indexing: the figure-caption counts are no longer hardcoded
@@ -159,8 +166,11 @@ deploy, so ask before `git push` unless told otherwise in the moment.
 
 ## Known pitfalls
 
-- **`index.html` line numbers drift constantly** — one file under active edit, 2024 lines,
-  md5 `33c3da71…` as indexed. Always `grep -n` to confirm a location before editing.
+- **`index.html` line numbers drift constantly** - one file under active edit: 2024 lines
+  when the docs were indexed, 2436 now. Every line number in `docs/` is wrong by roughly
+  100-400 lines. Always `grep -n` to confirm a location before editing. This is also why
+  `scripts/sweep.js` reads marker comments and not line offsets: the previous recipe
+  sliced `sed -n '356,1369p'` and had been silently failing with a SyntaxError.
 - **`needs` in `decide()` is the TRIGGER, not the full dependency set.** A stage settles on
   the canvas when the answer that makes it *meaningful* arrives, and the pick keeps
   sharpening after. Gate on full dependencies instead and nothing moves until the last
@@ -229,8 +239,8 @@ A change is done when every item holds. `/done-check` verifies them one by one.
 
 - Targeted tests green: `node --test test/<module>.test.js` for any `api/` change
   (`npm test` when in doubt). A frontend change gets a manual look at the page, because
-  `index.html` has no test coverage. A `decide()`/`recommend()` change also gets the
-  headless sweep (recipe in docs/CONVENTIONS.md, Testing).
+  `index.html` has no test coverage. Any engine change (`decide()`, `recommend()`,
+  `TOOLS`, `COMPETES`, `ROLE2STAGE`, `LAYER_OF`) also gets `npm run sweep`, green.
 - Every copy of a shared contract updated in the same commit (`VALID` x3, cap + card
   count, schema + Neon).
 - Docs re-indexed after a big `index.html` change; at minimum, do not leave the

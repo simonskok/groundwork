@@ -1,6 +1,6 @@
 ---
 name: edit-index-html
-description: Safely change index.html, the single 2431-line frontend file that has no build step and no test coverage.
+description: Safely change index.html, the single 2436-line frontend file that has no build step and no direct test coverage.
 ---
 
 # edit-index-html
@@ -28,6 +28,10 @@ ships silently.
    block. No `let`/`const`, no arrow functions, no modules, no `async`/`await`. The only
    exceptions are the two already there: `fetch` and `crypto.randomUUID()` (with a fallback).
 4. **Never change the canvas seed** `mulberry32(20260902)`. It is the signature image.
+5. **Never remove or move the `SWEEP-START` / `SWEEP-END` markers** without moving them
+   deliberately. `scripts/sweep.js` extracts the region between them, and that region must
+   stay DOM-free - new engine code goes inside it, anything touching `document` goes below
+   `SWEEP-END`. This replaced a recipe that sliced the file by line number and broke.
 
 ## While editing
 
@@ -50,7 +54,8 @@ ships silently.
 ## After editing
 
 1. `npm test` (it will not catch a frontend mistake, but run it anyway).
-2. If you touched `decide()` or `recommend()`, run the engine sweep from
-   `docs/CONVENTIONS.md` and check the card counts have not drifted.
+2. If you touched anything between `SWEEP-START` and `SWEEP-END`, run `npm run sweep`.
+   It must exit 0. Verified numbers: 2592 combinations, mean 17.70 cards, max 24,
+   mean 11.97 now, max 16.
 3. **Open `index.html` in a browser**, answer the eight questions, and look at the result.
    This is the only real check that exists. It is part of the definition of done.

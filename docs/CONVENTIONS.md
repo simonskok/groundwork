@@ -115,16 +115,31 @@ literals in `recommend()` and must never be built from user input.
   saved and restored around each case (`withEnv` in `test/tailor.test.js:36`).
 - **Coverage gaps:** `api/share.js` has no tests, and **none of `index.html` is tested** - no
   `decide()`, no `recommend()`, no rendering.
-- **Sweeping the engine without a browser** is possible and worth doing after any change to
-  `decide()`/`recommend()`. Extract the DOM-free region and drive it from Node:
+- **Sweeping the engine without a browser** is the only automated check that covers
+  `index.html`. Run it after any change to `decide()`, `recommend()`, `TOOLS`, `COMPETES`,
+  `ROLE2STAGE` or `LAYER_OF`:
 
   ```bash
-  { echo 'var window={matchMedia:function(){return{matches:false};}};'; sed -n '356,1369p' index.html; } > /tmp/engine.js
+  npm run sweep          # or: node scripts/sweep.js
   ```
 
-  Then `require` it, loop the 2592 answer combinations, and assert on `r.mods`. The current
-  numbers: **2592 combinations, mean 17.7 cards, max 24, mean 12.0 badged "now", max 16, and
-  zero cards missing an alternative or a layer.**
+  It extracts the DOM-free region of `index.html` between the `SWEEP-START` and `SWEEP-END`
+  marker comments, runs `recommend()` over every legal answer combination in a Node VM with
+  no DOM, and **exits non-zero if a gate fails**. It gates rather than reports, on purpose.
+
+  Gates: every card has at least one alternative; every card's role resolves through
+  `ROLE2STAGE` to a layer in `LAYER_OF`; the maximum card count fits the capture cap read
+  live from `api/capture.js`; the mean "Start here" count stays under 12.5; every `TOOLS`
+  entry appears in a `COMPETES` list and vice versa; every entry has a `checked` stamp and
+  an `against.any` fallback.
+
+  Verified numbers, recomputed 2026-09-07: **2592 combinations, mean 17.70 cards, min 8,
+  max 24, mean 11.97 badged "now", max 16, zero cards missing an alternative or a layer.**
+  It also prints the goal-specific `against` coverage as a tracked report, not a gate.
+
+  An earlier version of this recipe sliced the file by absolute line numbers
+  (`sed -n '356,1369p'`) and silently broke when the file grew. Do not reintroduce a line
+  number here - the markers are the contract.
 
 ## Not to be hand-edited / regenerated
 

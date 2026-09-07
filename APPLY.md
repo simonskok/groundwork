@@ -56,9 +56,10 @@ What changed in the two edited files, so the diff is quick to review:
 3. `npm test` - expect 15 tests: 12 pass, 3 skip (live tests). This converts the gate
    status from UNKNOWN to verified. If the counts differ, report the exact output
    verbatim - do not adjust any doc to match without saying so.
-4. Optionally run the headless sweep (docs/CONVENTIONS.md, Testing) - expect 2592
-   combinations, max 24 cards. This verifies the zero-headroom claim behind the
-   capture-cap rule.
+4. Run `npm run sweep` - expect 2592 combinations, mean 17.70 cards, max 24, and
+   "All gates passed". This verifies the zero-headroom claim behind the capture-cap rule.
+   (Done 2026-09-07: the sweep is now `scripts/sweep.js`, not the line-slice recipe this
+   checklist originally pointed at.)
 5. `/done-check` once, to see the command execute.
 6. If anything fails, fix the environment or report the failing contract; do not start
    feature work on an unverified foundation.

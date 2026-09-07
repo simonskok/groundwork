@@ -454,6 +454,10 @@
 <footer><div class="wrap">GROUNDWORK · decide your stack · v1 · a guided decision, not a black box<br>Recommendations are opinionated starting points. You own every choice.</div></footer>
 
 <script>
+/* SWEEP-START - scripts/sweep.js extracts everything between this marker and
+   SWEEP-END and runs it in Node with no DOM. Keep this region DOM-free: it holds
+   the registries, decide() and recommend(), and nothing that touches document.
+   Moving a marker changes what the sweep covers. Do not remove either one. */
 var $=function(s,r){return (r||document).querySelector(s)};
 var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 var answers={type:"",accounts:"",pay:"",heavy:"",ai:"",realtime:"",comfort:"",priority:""};
@@ -1474,6 +1478,7 @@ function recommend(a, idea){
           costLabel:costLabel,costCap:costCap,costLines:lines,graph:G,profile:p,
           coherence:coherence};
 }
+/* SWEEP-END - end of the DOM-free region. Everything below touches the DOM. */
 
 /* ---------- Live graph state from partial answers -------------------------
    Same rules as the final result: decide() is asked what it would pick, and a

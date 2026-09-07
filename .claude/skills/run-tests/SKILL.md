@@ -19,7 +19,8 @@ locally, before the commit. That order is the whole safety model.
 
 | Command | Covers |
 |---|---|
-| `npm test` | everything: `node --test test/` (expected: 12 pass, 3 live tests skip) |
+| `npm test` | everything in `test/`: `node --test` (expected: 12 pass, 3 live tests skip) |
+| `npm run sweep` | `index.html`'s engine: every answer combination, exits non-zero on a broken invariant |
 | `node --test test/capture.test.js` | `api/capture.js` - method/validation guards |
 | `node --test test/tailor.test.js` | `api/tailor.js` - provider pick, JSON extraction, HTTP guards |
 | `npm run test:live` | optional: really calls the model API. Needs `RUN_LIVE=1` + a real key. Only when asked. |
@@ -31,9 +32,11 @@ difference rather than assuming the doc is right.
 ## What has no coverage (do not pretend otherwise)
 
 - `api/share.js` has no tests.
-- Nothing in `index.html` is tested - no `decide()`, no `recommend()`, no rendering.
-  A frontend change is verified by opening the page and looking, plus the headless
-  sweep for engine changes (docs/CONVENTIONS.md, Testing).
+- `npm test` covers no part of `index.html`. `npm run sweep` covers the engine region
+  (registries, `decide()`, `recommend()`) between the `SWEEP-START`/`SWEEP-END` markers -
+  outcomes, not rendering. Everything else in the file (the canvas, all DOM code, the
+  spin-up panel, the share flow) has no automated coverage at all and is verified by
+  opening the page and looking.
 
 There is no lint, no typecheck, no build. Do not invent one, and do not report their
 absence as a failure.

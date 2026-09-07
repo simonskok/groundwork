@@ -11,6 +11,7 @@
   },
   "scripts": {
     "test": "node --test",
+    "sweep": "node scripts/sweep.js",
     "test:live": "RUN_LIVE=1 node --test"
   }
 }

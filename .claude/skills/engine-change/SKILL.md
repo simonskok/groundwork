@@ -79,7 +79,20 @@ That is a VALID-whitelist change - see the data-contracts skill. Frontend alone:
 
 ## After any engine change
 
-Run the headless sweep (recipe in docs/CONVENTIONS.md, Testing): all 2592 combinations,
-assert cards have alternatives and layers, check mean/max cards and the now-split.
-Reference numbers as last indexed: mean 17.7 cards, max 24, mean 12.0 now, max 16.
-Frontend has no automated tests - also open the page and look at it.
+Run `npm run sweep`. It is the only automated check that covers `index.html`, and it
+exits non-zero when an invariant breaks, so a green run means something.
+
+What it gates: every card has an alternative; every role resolves through `ROLE2STAGE`
+to a layer in `LAYER_OF`; the max card count fits the capture cap it reads live from
+`api/capture.js`; the mean "Start here" count stays under 12.5; every `TOOLS` id is in a
+`COMPETES` list and vice versa; every entry has a `checked` stamp and an `against.any`.
+
+Verified numbers, 2026-09-07: 2592 combinations, mean 17.70 cards, min 8, max 24,
+mean 11.97 now, max 16. If your run differs, report the difference rather than editing
+a doc to match. It also prints goal-specific `against` coverage as a report, not a gate.
+
+The sweep reads the region between the `SWEEP-START` and `SWEEP-END` comments in
+`index.html`. Keep that region DOM-free: put new engine code inside it, and anything that
+touches `document` below `SWEEP-END`. The sweep fails loudly if a marker is gone.
+
+The frontend still has no automated tests - also open the page and look at it.

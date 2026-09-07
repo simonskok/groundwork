@@ -58,5 +58,7 @@ considering that question.
 
 ## Before you call it done
 
-`npm test`, then sweep the engine per `docs/CONVENTIONS.md`, then open `index.html` in a
-browser and confirm the new card renders with its alternatives and its counterfactual.
+`npm test`, then `npm run sweep` (it must exit 0 - it checks the new tool is reachable
+through `COMPETES`, has a `checked` stamp and an `against.any`, and that the card count
+still fits the capture cap), then open `index.html` in a browser and confirm the new card
+renders with its alternatives and its counterfactual.
