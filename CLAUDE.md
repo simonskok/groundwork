@@ -137,6 +137,20 @@ solo repo that auto-deploys, so a branch only splits attention and hides what is
 current. Pushing is separate: it publishes to GitHub and triggers a Vercel **production**
 deploy, so ask before `git push` unless told otherwise in the moment.
 
+**If a PR is ever opened here, never land it with GitHub's merge button.** Vercel refuses a
+commit whose author is not the GitHub login connected to the Hobby owner (`simonskok`), and the
+button writes its own commit authored by whoever clicked it - `simonskok1-source`.
+`scripts/cloud_setup.sh` pins your own commits to `simonskok <simonskok@yahoo.com>`, but it has
+no reach over a commit GitHub creates server-side. The refusal is silent in every direction: the
+PR shows merged, CI is green, Vercel still posts a successful preview comment, and production
+stops moving. In September 2026 that cost `festivals-europe-2026` 24 merged PRs and
+`high-end-luxury-events` three, both undetected for two days. This repo escaped only because it
+does not branch. Land any PR with a local squash instead, so the push carries your author:
+
+```bash
+git merge --squash <branch> && git commit -m "<title>" && git push origin main
+```
+
 ## Non-negotiables (design reasoning — don't relitigate)
 
 - **Honesty is the product.** The advisor must sometimes recommend LESS (no-code for a
