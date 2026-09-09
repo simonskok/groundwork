@@ -15,7 +15,8 @@ Vercel project name are recorded there.
 
    ```bash
    git fetch origin main
-   code=$(curl -s -o /tmp/live.html -w '%{http_code}' https://groundwork-simonskoks-projects.vercel.app/)
+   code=$(curl -s --retry 2 -o /tmp/live.html -w '%{http_code}' https://groundwork-simonskoks-projects.vercel.app/)
+   [ "$code" = "000" ] && echo "CHECK FAILED: no answer at all, so this proves nothing - re-run it"
    [ "$code" = "200" ] || echo "site not answering: $code"
    diff <(md5sum < /tmp/live.html) <(git show origin/main:index.html | md5sum) \
      && echo "index.html matches main" || echo "STALE: the live index.html is not main"
