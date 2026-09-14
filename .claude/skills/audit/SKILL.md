@@ -12,6 +12,10 @@ Argument handling — `$ARGUMENTS`:
 * `continue` — read `AGENT_WORKFLOW_PLAN.md` at the repo root, act on its header block (`SECTIONS DONE` / `SECTIONS OPEN` / `NEXT`), and execute whatever `NEXT` names. If the plan's `NEXT` says a new session is required and this is that new session, proceed. If `NEXT` is empty or the plan is missing, say so and stop.
 * anything else — treat it as a constraint on this run and state how it changed the plan.
 
+If `AGENT-WORKFLOW-AUDIT.md` is not at the repo root, stop and say so — do not improvise an audit from this file alone.
+
+Before ending any run that created or changed a file: push to the remote, then run `git log origin/<branch> --oneline -1` and paste the output. In a cloud sandbox the container is discarded at session end, so an unpushed commit does not exist. A skill or hook that was never pushed silently does nothing in the next session.
+
 Two stops are deliberate. Do not collapse them:
 
 1. After §5b, stop. The user reads and approves the plan before §6 touches anything.
