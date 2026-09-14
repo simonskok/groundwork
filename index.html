@@ -454,6 +454,7 @@
 <footer><div class="wrap">GROUNDWORK · decide your stack · v1 · a guided decision, not a black box<br>Recommendations are opinionated starting points. You own every choice.</div></footer>
 
 <script>
+/* ENGINE:START */
 var $=function(s,r){return (r||document).querySelector(s)};
 var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 var answers={type:"",accounts:"",pay:"",heavy:"",ai:"",realtime:"",comfort:"",priority:""};
@@ -1539,6 +1540,7 @@ function applyTargets(tg,stagger){
   return decidedCount;
 }
 
+/* ENGINE:END */
 /* ---------- Canvas rendering ---------------------------------------------- */
 var cv=$("#web"), ctx=cv.getContext("2d"), W=0,H=0,DPR=Math.min(2,window.devicePixelRatio||1),RAD=0;
 function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();}

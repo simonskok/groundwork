@@ -114,18 +114,35 @@ numbers is what stops this breaking again in a file CLAUDE.md itself says drifts
 constantly; it is the same reasoning as the repo's own "figure-caption counts are derived,
 never typed" rule.
 
+**Correction made during implementation:** this section originally called the marked span
+"the DOM-free region". It is not. `$` (the line right after `ENGINE:START`) and the last
+line of `graphTargets()` both reach for `document`, and neither is called by the sweep, so
+the region loads cleanly today and would not tomorrow if an export ever pulled rendering
+code in. `engine.js` now ships a `document` tripwire that raises a named error instead of a
+bare `ReferenceError`, and every claim here says "engine region", not "DOM-free".
+
 **Content** Two lines added to `index.html`, no behaviour change (both are comments inside
 the existing `<script>` block):
 
 - `/* ENGINE:START */` immediately after `<script>` (currently line 456)
 - `/* ENGINE:END */` immediately before `/* ---------- Canvas rendering ---- */`
-  (currently line 1542, the first line that touches the DOM is 1544)
+  (currently line 1542; the first line that touches the DOM *at load* is 1544)
 
 Then `scripts/engine.js`:
 
 ```js
-// Load the DOM-free region of index.html as a Node module.
+// Load index.html's engine region as a Node module.
 // Anchored on markers, never line numbers - index.html drifts constantly.
+//
+// The region is everything that computes: STAGES, TOOLS, COMPETES, decide(),
+// recommend(), and graphTargets(). Two things in it reach for the DOM - the $
+// helper and the last line of graphTargets() - but only when called, and the
+// sweep calls neither, so loading the region has no side effects.
+//
+// Both shims below are deliberate. matchMedia runs at load time and must return
+// something. document is a tripwire: nothing should reach it, so touching it
+// raises a named error instead of a bare ReferenceError, which is what a future
+// export that pulls DOM code into the sweep would otherwise produce.
 var fs = require("fs");
 var path = require("path");
 var os = require("os");
@@ -141,7 +158,7 @@ function slice() {
   if (a < 0 || b < 0 || b < a) {
     throw new Error(
       "index.html is missing the " + START + " / " + END + " markers.\n" +
-      "The engine check is anchored on them. Restore both around the DOM-free\n" +
+      "The engine check is anchored on them. Restore both around the engine\n" +
       "region: START right after <script>, END right before the canvas rendering\n" +
       "block. Do not replace them with line numbers - the file drifts."
     );
@@ -152,15 +169,29 @@ function slice() {
 var EXPORTS = ["decide", "recommend", "Q_VALUES", "STAGES", "NODES",
                "TOOLS", "COMPETES", "ROLE2STAGE", "CHECKED", "LAYER_OF"];
 
+var SHIMS = [
+  "var window={matchMedia:function(){return{matches:false};}};",
+  "var document={get documentElement(){return domReached();}," +
+  "querySelector:function(){return domReached();}};",
+  "function domReached(){throw new Error(" +
+  "'engine.js: the engine region reached for the DOM. It is loaded outside a " +
+  "browser, so it must stay computation-only. Either the export list now pulls " +
+  "in rendering code, or rendering code moved above the ENGINE:END marker.');}"
+].join("\n");
+
+var cached = null;
+
 function load() {
+  if (cached) return cached;              // one temp dir per process, not per call
   var body = [
-    "var window={matchMedia:function(){return{matches:false};}};",
+    SHIMS,
     slice(),
     "module.exports={" + EXPORTS.map(function (n) { return n + ":" + n; }).join(",") + "};"
   ].join("\n");
   var tmp = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "gw-engine-")), "engine.js");
   fs.writeFileSync(tmp, body);
-  return require(tmp);
+  cached = require(tmp);
+  return cached;
 }
 
 module.exports = { load: load, slice: slice, ROOT: ROOT, SRC: SRC };
