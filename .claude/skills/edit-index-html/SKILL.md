@@ -1,6 +1,6 @@
 ---
 name: edit-index-html
-description: Safely change index.html, the single 2431-line frontend file that has no build step and no test coverage.
+description: Safely change index.html, the single large frontend file that has no build step and no test coverage for its rendering.
 ---
 
 # edit-index-html
@@ -49,8 +49,10 @@ ships silently.
 
 ## After editing
 
-1. `npm test` (it will not catch a frontend mistake, but run it anyway).
-2. If you touched `decide()` or `recommend()`, run the engine sweep from
-   `docs/CONVENTIONS.md` and check the card counts have not drifted.
+1. `npm run verify` - the tests plus the engine sweep. It must exit 0. This catches a
+   `decide()`/`recommend()` regression; it cannot catch a rendering mistake.
+2. Leave the `/* ENGINE:START */` and `/* ENGINE:END */` comments where they are. The sweep
+   slices between them, so deleting one turns the gate off. Code that touches the DOM
+   belongs below `ENGINE:END`.
 3. **Open `index.html` in a browser**, answer the eight questions, and look at the result.
    This is the only real check that exists. It is part of the definition of done.

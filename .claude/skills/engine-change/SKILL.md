@@ -40,7 +40,8 @@ compare table and every "options it beat" list automatically. Rules:
 - The capture cap (24) has zero headroom - raise it in the same commit
   (see data-contracts skill).
 - Watch the now/later split: "Start here" must stay the minimum that gets you live.
-  Sweep mean is about 12 now-cards; past that, demote something to later.
+  Sweep mean is about 12 now-cards and `npm run verify` fails above 12.5; past that,
+  demote something to later rather than waiting for the gate.
 
 ## Adding a canvas stage vs a decision
 
@@ -79,7 +80,11 @@ That is a VALID-whitelist change - see the data-contracts skill. Frontend alone:
 
 ## After any engine change
 
-Run the headless sweep (recipe in docs/CONVENTIONS.md, Testing): all 2592 combinations,
-assert cards have alternatives and layers, check mean/max cards and the now-split.
-Reference numbers as last indexed: mean 17.7 cards, max 24, mean 12.0 now, max 16.
-Frontend has no automated tests - also open the page and look at it.
+`npm run verify` - the tests, then the sweep over all 2592 combinations. It asserts that
+every card has alternatives and a layer, that every role is in `ROLE2STAGE`, that the max
+result still fits the capture cap, and that the answer space matches in all four places
+that hold it. Exit 0 or the commit is not ready.
+
+It prints the numbers, so read them from the run rather than from here: today mean 17.7
+cards, max 24, mean 12.0 now, max 16. Rendering has no automated test - also open the page
+and look at it.

@@ -45,8 +45,10 @@ unique character per value in `CODE`.
 `cleanStack` in `api/capture.js` truncates the captured stack at 24 entries, and the
 verified maximum result is exactly 24 cards - zero headroom. Adding a card (`mod()`
 call) without raising the cap silently drops data from the moat for the heaviest
-profiles. The cap raise goes in the same commit as the new card, and the sweep
-(docs/CONVENTIONS.md, Testing) confirms the new maximum.
+profiles. The cap raise goes in the same commit as the new card, and `npm run verify`
+enforces it: the sweep reads the cap out of `cleanStack` and fails when the maximum result
+exceeds it, naming the number. It also compares the answer space across all four places
+that hold it, so contract 2 no longer depends on anyone remembering there are four.
 
 ## 4. The privacy rule (the brand)
 

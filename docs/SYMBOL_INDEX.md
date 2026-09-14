@@ -9,7 +9,9 @@ grep -n 'function decide' index.html
 ```
 
 > **Stale as of 2026-09-05:** `index.html` has changed since that index and is now
-> **2431 lines**, md5 `9be0986189623d2fb7bbe28c575d0f17`. Every line number below is
+> longer. No current line count or md5 is recorded here: every one this repo has written
+> down was wrong by the time someone read it. `wc -l index.html` and `md5sum index.html`
+> are the answer. Every line number below is
 > approximate. The symbols themselves are still correct.
 
 Module names match the sections in [MODULE_MAP.md](MODULE_MAP.md).

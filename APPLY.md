@@ -23,10 +23,11 @@ CLAUDE_FOUNDATION_SETUP_groundwork.md      DELETE (superseded by this foundation
 
 What changed in the two edited files, so the diff is quick to review:
 
-- **CLAUDE.md** - everything you ratified is untouched except: the section-boundary
-  line numbers in "Where things live" updated to the current file (CSS 13-345, HTML
-  346-455, JS 456-2431); a STALE warning added under the docs pointers (the index was
-  built at 2024 lines, the file is 2431); Fraunces added to the visual identity line
+- **CLAUDE.md** - everything you ratified is untouched except: the section boundaries in
+  "Where things live" described by structure rather than by line number, because every
+  line number written into this repo has gone stale; a STALE warning added under the docs
+  pointers (the index was built at 2024 lines, the file is several hundred longer);
+  Fraunces added to the visual identity line
   (it is in the code, the line omitted it). Appended at the end: Frozen contracts,
   Definition of done, Domain language pointer, Session foundation.
 - **HANDOFF.md** - sections 1, 3 (tree), 4 (variable table), 5 (privacy paragraph),
@@ -56,9 +57,9 @@ What changed in the two edited files, so the diff is quick to review:
 3. `npm test` - expect 15 tests: 12 pass, 3 skip (live tests). This converts the gate
    status from UNKNOWN to verified. If the counts differ, report the exact output
    verbatim - do not adjust any doc to match without saying so.
-4. Optionally run the headless sweep (docs/CONVENTIONS.md, Testing) - expect 2592
-   combinations, max 24 cards. This verifies the zero-headroom claim behind the
-   capture-cap rule.
+4. `npm run verify` - the tests, then the engine sweep. Expect exit 0, about 5 s, and
+   2592 combinations with max 24 cards. The sweep asserts the zero-headroom claim behind
+   the capture-cap rule rather than leaving it to a reader.
 5. `/done-check` once, to see the command execute.
 6. If anything fails, fix the environment or report the failing contract; do not start
    feature work on an unverified foundation.
@@ -79,8 +80,8 @@ What changed in the two edited files, so the diff is quick to review:
 
 - Gate status: `npm test` results (12 pass / 3 skip is the repo's documented claim,
   last confirmed by a human 2026-09-04; not runnable from the authoring chat).
-- The sweep numbers (2592 / mean 17.7 / max 24 / mean 12.0 now): documented in
-  docs/CONVENTIONS.md, not re-run from chat. Step 4 above verifies the max.
+- The sweep numbers (2592 / mean 17.7 / max 24 / mean 12.0 now): printed by
+  `npm run sweep`, not re-run from chat. Step 4 above verifies them.
 - Whether the chosen Node 22 environment actually applies to a fresh session
   (ENVIRONMENT.md, Known snags): step 1 above verifies.
 - Which env vars are currently set in Vercel (AI layer on or off): checkable only in

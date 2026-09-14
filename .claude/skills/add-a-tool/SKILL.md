@@ -58,5 +58,8 @@ considering that question.
 
 ## Before you call it done
 
-`npm test`, then sweep the engine per `docs/CONVENTIONS.md`, then open `index.html` in a
+`npm run verify` (tests plus the engine sweep; it must exit 0), then open `index.html` in a
 browser and confirm the new card renders with its alternatives and its counterfactual.
+
+If you added a `mod()` call, the sweep is what tells you whether you have just pushed the
+maximum result past the capture cap. It fails with the number to raise.

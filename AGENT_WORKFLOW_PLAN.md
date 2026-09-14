@@ -1,7 +1,45 @@
 # Agent Workflow Plan - groundwork
 Branch: claude/lucid-goldberg-1v42fo | Pushed: yes | Date: 2026-09-14 | Commit: e65b33b
-SECTIONS DONE: 0, 1, 2, 3, 4, 5, 5b   SECTIONS OPEN: 6 (needs approval), 7 (re-measure 2026-09-28)
-NEXT: approve or amend Tier 1 below, then run `/audit continue` in this session.
+SECTIONS DONE: 0, 1, 2, 3, 4, 5, 5b, 6 (Tier 1)   SECTIONS OPEN: 7 (re-measure 2026-09-28)
+NEXT: nothing - re-measure §7 on 2026-09-28. Tier 2 and Tier 3 wait on their stated triggers.
+
+## §6 Implementation - done 2026-09-14
+
+Tier 1 landed in three commits, a reviewer subagent before each.
+
+| Commit | What | Gate |
+|---|---|---|
+| `ac719a7` | Markers in `index.html` + `scripts/engine.js` | loads, and a deleted marker gives a named error |
+| `aac62a5` | `scripts/sweep.js` + `npm run verify` / `npm run sweep` + the `docs/CONVENTIONS.md` recipe replaced | 8 injected regressions, 8 exit-1 refusals |
+| this one | All 19 references repointed; every hand-typed line count and md5 removed | `grep` for the dead recipe returns nothing |
+
+**No hook was written, so the audit's second deliberate stop does not apply.** Both hooks
+stayed in Tier 2 with their triggers stated, which is where the approved plan put them.
+Nothing here needs a new session to prove.
+
+Four things were found during implementation that the plan had wrong, each fixed in the
+commit that hit it:
+
+1. The marked span is **not DOM-free**, as T1-1 originally called it. `$` and the last line
+   of `graphTargets()` both reach for `document`. Neither runs when the region is merely
+   loaded, so the sweep is safe, but the claim was false. `engine.js` now ships a `document`
+   tripwire that raises a named error instead of a bare `ReferenceError`.
+2. The capture-cap regex was **fail-open**. `cleanStack` truncates role at 60 and pick at 80
+   as well as the stack at 24, and the original pattern took the first `.slice(0, N)` it
+   found. Reorder the function and the gate reads the cap as 60, which can never fire.
+   Anchored on the stack argument, and proven to fail closed on a reorder.
+3. T1-1's two added lines **invalidated the staleness banner in all five `docs/` files**,
+   which had stated `2431 lines, md5 9be09861...`. Exactly the self-invalidating class §5b
+   warns about, caught and fixed in the same commit that caused it. Every hand-typed current
+   line count and md5 is now gone from the repo's prose, including the `CSS 13-345, HTML
+   346-455, JS 456-2431` map in CLAUDE.md and a hardcoded line count in a skill description.
+4. A replacement sentence asserted **"two"** past stale records in one place and **"three"**
+   in six others. The count is now gone rather than reconciled: a hand-maintained tally of
+   hand-maintained facts is the same defect one level up.
+
+CLAUDE.md went from 271 to 277 lines. It gained the `npm run verify` instruction and the
+reasoning for not writing line numbers down; it lost the dead recipe pointer and three
+hardcoded facts.
 
 This run re-derived every number from scratch rather than inheriting the previous plan's
 evidence, and it corrects one figure that plan got wrong (see T1-2, "Start here" mean).

@@ -8,7 +8,9 @@ and the edges below are *call* edges, not import edges.
 Indexed 2026-09-04 against `index.html` @ 2024 lines, md5 `33c3da71…` (commit `3a1f721`).
 
 > **Stale as of 2026-09-05:** `index.html` has changed since that index and is now
-> **2431 lines**, md5 `9be0986189623d2fb7bbe28c575d0f17`. The structure, the registries and
+> longer. No current line count or md5 is recorded here: every one this repo has written
+> down was wrong by the time someone read it. `wc -l index.html` and `md5sum index.html`
+> are the answer. The structure, the registries and
 > the reasoning below still hold; every `file:line` in this document is approximate.
 > `grep -n` to confirm a location before editing.
 **`grep -n` to confirm before editing.** Flat lookup: [SYMBOL_INDEX.md](SYMBOL_INDEX.md).
@@ -300,8 +302,8 @@ Tail calls: `renderSpinKit(r)` `:1702` (guarded), `enhanceWithAI(r)` `:1703`,
 | `cleanStack(s)` | `api/capture.js:61` | `[{role,pick}]`, capped at 24 and truncated - the sellable signal |
 | `validSid` / `newSid` / `validEmail` | `api/capture.js:69`, `:73`, `:75` | Guards; email requires `consent === true` |
 
-⚠ **`cleanStack` caps the stack at 24 entries** `api/capture.js:63`, and a sweep of all
-2592 answer combinations puts the maximum at **exactly 24** cards (`content` + logins + pay
+⚠ **`cleanStack` caps the stack at 24 entries** (`grep -n 'function cleanStack' api/capture.js`),
+and a sweep of all 2592 answer combinations puts the maximum at **exactly 24** cards (`content` + logins + pay
 now + heavy + AI + real-time + nontech + scale; mean 17.7). Nothing is truncated today, and
 there is **zero headroom** - the next `mod()` call added to `recommend()` silently drops
 cards from the capture table for the heaviest profiles. Raise the cap when you add a card.
@@ -333,9 +335,11 @@ Already applied to the live Neon project. No migration tooling exists.
 | `test/tailor.test.js` | `extractJSON`, `answerSummary`, `buildPrompt`, `pickProvider`, and the 405/501/400 HTTP guards. 3 LIVE tests gated on `RUN_LIVE=1` |
 | `test/capture.test.js` | 501/405/400 guards - everything that returns before a DB call |
 
-Both hand-roll a `mockRes()` and save/restore env around each case. **`api/share.js` and all
-of `index.html` have no automated tests** - the 2592-combination sweep quoted in commit
-`3a1f721` was run ad hoc, not committed.
+Both hand-roll a `mockRes()` and save/restore env around each case. **`api/share.js` and
+`index.html`'s rendering have no automated tests.** `decide()` and `recommend()` are covered
+by `npm run sweep` (`scripts/sweep.js`), which asserts on all 2592 combinations and exits
+non-zero on drift. Before that existed the sweep was an ad-hoc recipe that had been dead for
+400 lines of file growth.
 
 ---
 

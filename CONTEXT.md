@@ -47,8 +47,8 @@ source wins over this summary. Line numbers drift in `index.html` - locate symbo
   the canvas, deliberately smaller than the full dependency set so the knot untangles as
   answers land rather than all at the end.
 - **now / later** - the badge split on cards. "Start here" (now) must mean the minimum
-  that gets you live; sweep mean is about 12 now-cards, and past that something gets
-  demoted.
+  that gets you live; sweep mean is about 12 now-cards, `npm run verify` fails above 12.5,
+  and past that something gets demoted.
 - **Q_VALUES / A_LABEL** - the counterfactual value space and the plain-word labels for
   every answer value (index.html). Miss `Q_VALUES` when adding a question and
   counterfactuals silently ignore it.
@@ -64,9 +64,11 @@ source wins over this summary. Line numbers drift in `index.html` - locate symbo
   the engine decides 26 stages and emits up to 24 cards; the newer founder-facing
   decisions are cards only.
 - **stacks** - the `public.stacks` table: short share links (id, answers, idea).
-- **sweep** - the headless engine run: extract the DOM-free region of `index.html`, loop
-  all 2592 answer combinations, assert on the cards. Recipe in docs/CONVENTIONS.md
-  (Testing). Run it after any `decide()`/`recommend()` change.
+- **sweep** - the headless engine run: `npm run sweep` (or `npm run verify` for the tests
+  too). `scripts/engine.js` loads the engine region of `index.html` between its
+  `ENGINE:START` / `ENGINE:END` markers, then all 2592 answer combinations go through
+  `recommend()` and the result is asserted. Exit 0 green, exit 1 red. Run it after any
+  `decide()`/`recommend()` change.
 - **tailor / tailor stages** - `api/tailor.js`, the AI layer. Three stages by request
   body: `followups` (1-2 smart questions), `insights` (the tailored read, the default),
   `brief` (a build brief for an AI coding tool). Gemini default, Groq fallback, 501 with

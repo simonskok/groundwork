@@ -31,9 +31,11 @@ difference rather than assuming the doc is right.
 ## What has no coverage (do not pretend otherwise)
 
 - `api/share.js` has no tests.
-- Nothing in `index.html` is tested - no `decide()`, no `recommend()`, no rendering.
-  A frontend change is verified by opening the page and looking, plus the headless
-  sweep for engine changes (docs/CONVENTIONS.md, Testing).
+- `index.html`'s rendering is not tested - no canvas, no `renderResults`, no wiring. A
+  frontend change is verified by opening the page and looking.
+- `decide()` and `recommend()` ARE covered, by `npm run sweep`. `npm run verify` runs the
+  tests and then the sweep, exits 0 green and 1 red, and takes about 5 s. Use it for any
+  engine change.
 
 There is no lint, no typecheck, no build. Do not invent one, and do not report their
 absence as a failure.

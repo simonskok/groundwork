@@ -43,8 +43,10 @@ npm run test:live    # RUN_LIVE=1 + a model key; POSIX shells only (env-prefix s
   `/api/*` calls fail and the site degrades to the deterministic advisor by design.
 - **Full local run incl. `/api`:** `vercel dev` (serves at :3000). UNVERIFIED — needs the
   Vercel CLI installed; not a package.json script.
-- **Sweep the engine headlessly** after any `decide()`/`recommend()` change — see the recipe
-  in `docs/CONVENTIONS.md` (Testing). Current: 2592 combinations, mean 17.7 cards, max 24.
+- **`npm run verify`** - the tests, then the engine sweep. Run it after any
+  `decide()`/`recommend()` change. About 5 s, exit 0 green, exit 1 red with the cause named.
+  `npm run sweep` runs the sweep alone; it prints the current numbers, so don't copy them
+  anywhere. VERIFIED.
 - **No lint, typecheck, or build step exists.** Don't invent one.
 
 ## Credentials — where they actually are
@@ -87,7 +89,7 @@ hand out a connection string; take `DATABASE_URL` from the Vercel or Neon dashbo
 ## Where things live
 
 ```
-index.html          The entire frontend: CSS 13-345, HTML 346-455, JS 456-2431
+index.html          The entire frontend: CSS, then HTML, then one <script> block
 api/tailor.js       AI layer — Gemini default / Groq fallback. 3 stages: followups/insights/brief
 api/share.js        Short share links (?r=) — Neon-backed. GET resolves, POST creates
 api/capture.js      Anonymous session capture (the data moat) + opt-in email. Two phases
@@ -109,9 +111,11 @@ with `file:line` → **[docs/MODULE_MAP.md](docs/MODULE_MAP.md)**. Symbol lookup
 All five were re-indexed 2026-09-04 against `index.html` @ 2024 lines, md5 `33c3da71…`
 (commit `3a1f721`), including the 8 new stages, 2 new layers and 28 new tools.
 
-**The index is currently STALE.** `index.html` has since grown to 2431 lines
-(md5 `2b5e2083…`), so every `index.html` line number in the five docs (and some in this
-file's own history) may be off. Structure, symbol names and rationale are still right;
+**The index is currently STALE.** `index.html` has grown by several hundred lines since,
+so every `index.html` line number in the five docs (and some in this file's own history) is
+off. No current line count or md5 is recorded here on purpose: every one this repo has
+written down was wrong by the time someone read it. `wc -l index.html` and `md5sum index.html`
+are the answer, and `npm run sweep` prints the live registry counts. Structure, symbol names and rationale are still right;
 positions are not. Treat the docs as a map of what exists, `grep -n` as the only source
 of where it is, and re-generate the index at the next big `index.html` change. One known
 content fix since indexing: the figure-caption counts are no longer hardcoded
@@ -173,8 +177,10 @@ git merge --squash <branch> && git commit -m "<title>" && git push origin main
 
 ## Known pitfalls
 
-- **`index.html` line numbers drift constantly** — one file under active edit, 2024 lines,
-  md5 `33c3da71…` as indexed. Always `grep -n` to confirm a location before editing.
+- **`index.html` line numbers drift constantly** - one file under active edit, indexed at
+  2024 lines and several hundred longer since. Always `grep -n` to confirm a location before
+  editing, and never write today's line count or md5 into prose: every one recorded here has
+  gone stale unnoticed.
 - **`needs` in `decide()` is the TRIGGER, not the full dependency set.** A stage settles on
   the canvas when the answer that makes it *meaningful* arrives, and the pick keeps
   sharpening after. Gate on full dependencies instead and nothing moves until the last
@@ -187,8 +193,8 @@ git merge --squash <branch> && git commit -m "<title>" && git push origin main
 - **"Start here" has to mean the minimum that gets you live.** With 26 stages it is easy to
   badge everything `core` and end up with 15 "Start here" cards, which is the upsell the
   product exists to refuse. Results carry a `now / later` split for exactly this reason;
-  the sweep currently gives mean 12.0 "now", max 16. If the mean creeps past ~12, demote
-  something.
+  the sweep currently gives mean 12.0 "now", max 16, and `npm run verify` fails above 12.5.
+  If the mean creeps past ~12, demote something rather than waiting for the gate.
 - **The capture cap has zero headroom.** `cleanStack` truncates at 24 entries
   (`api/capture.js:63`) and the verified maximum result is exactly 24 cards. The next
   `mod()` you add silently drops data from the moat — raise the cap in the same commit.
@@ -243,8 +249,8 @@ A change is done when every item holds. `/done-check` verifies them one by one.
 
 - Targeted tests green: `node --test test/<module>.test.js` for any `api/` change
   (`npm test` when in doubt). A frontend change gets a manual look at the page, because
-  `index.html` has no test coverage. A `decide()`/`recommend()` change also gets the
-  headless sweep (recipe in docs/CONVENTIONS.md, Testing).
+  `index.html` has no test coverage for rendering. A `decide()`/`recommend()` change gets
+  `npm run verify`, which must exit 0.
 - Every copy of a shared contract updated in the same commit (`VALID` x3, cap + card
   count, schema + Neon).
 - Docs re-indexed after a big `index.html` change; at minimum, do not leave the

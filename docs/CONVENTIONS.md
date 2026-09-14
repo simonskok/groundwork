@@ -5,7 +5,9 @@ Inferred from the code as it actually is, not from ideals. Indexed 2026-09-04 ag
 [../CLAUDE.md](../CLAUDE.md) and [MODULE_MAP.md](MODULE_MAP.md).
 
 > **Stale as of 2026-09-05:** `index.html` has changed since that index and is now
-> **2431 lines**, md5 `9be0986189623d2fb7bbe28c575d0f17`. The structure, the registries and
+> longer. No current line count or md5 is recorded here: every one this repo has written
+> down was wrong by the time someone read it. `wc -l index.html` and `md5sum index.html`
+> are the answer. The structure, the registries and
 > the reasoning below still hold; every `file:line` in this document is approximate.
 > `grep -n` to confirm a location before editing.
 
@@ -165,8 +167,9 @@ literals in `recommend()` and must never be built from user input.
    `build` layer, and loses its counterfactual and compare button. No error is thrown.
 7. **"Start here" must mean the minimum that gets you live.** With 26 stages it is easy to
    badge everything `core` and produce a wall of "Start here" cards - the exact upsell this
-   product refuses. Current sweep: mean 12.0 "now" cards, max 16. If the mean creeps much
-   past ~12, demote something to `later`.
+   product refuses. Current sweep: mean 12.0 "now" cards, max 16, and `npm run verify`
+   fails above 12.5. If the mean creeps much past ~12, demote something to `later` rather
+   than waiting for the gate to stop you.
 8. **`cleanStack` caps the captured stack at 24** `api/capture.js:63`, and the verified
    maximum result is **exactly 24 cards**. Zero headroom: the next `mod()` you add starts
    silently truncating the data moat for the heaviest profiles. Raise the cap in the same

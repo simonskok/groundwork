@@ -4,7 +4,9 @@ Indexed 2026-09-04 against `index.html` @ 2024 lines, md5 `33c3da718f58b159565e3
 (commit `3a1f721`). Backend files unchanged since the first index.
 
 > **Stale as of 2026-09-05:** `index.html` has changed since that index and is now
-> **2431 lines**, md5 `9be0986189623d2fb7bbe28c575d0f17`. The structure, the registries and
+> longer. No current line count or md5 is recorded here: every one this repo has written
+> down was wrong by the time someone read it. `wc -l index.html` and `md5sum index.html`
+> are the answer. The structure, the registries and
 > the reasoning below still hold; every `file:line` in this document is approximate.
 > `grep -n` to confirm a location before editing.
 
