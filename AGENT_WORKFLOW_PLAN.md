@@ -256,7 +256,11 @@ Object.keys(QV).forEach(function (k) {
 /* ---- frozen contract 3: the capture cap, read from cleanStack ----------- */
 var capSrc = fs.readFileSync(path.join(ROOT, "api", "capture.js"), "utf8");
 var fn = capSrc.indexOf("function cleanStack");
-var capM = fn < 0 ? null : capSrc.slice(fn, fn + 400).match(/\.slice\(0,\s*(\d+)\)/);
+// Anchored on the stack argument itself. cleanStack also truncates role and pick,
+// so a looser regex would read 60 or 80 as the cap after any reorder - and a cap
+// larger than the real one is a gate that never fires. A rename makes this miss
+// and fail closed, which is the right direction.
+var capM = fn < 0 ? null : capSrc.slice(fn, fn + 400).match(/\bs\.slice\(0,\s*(\d+)\)/);
 if (!capM) fail("api/capture.js: could not read the cleanStack cap. Contract 3 is unverifiable.");
 var CAP = capM ? Number(capM[1]) : 0;
 

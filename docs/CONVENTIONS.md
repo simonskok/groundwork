@@ -113,18 +113,27 @@ literals in `recommend()` and must never be built from user input.
 - **Pattern:** every suite hand-rolls a `mockRes()` (chainable `status().json()`, plus
   `setHeader`) and calls the exported handler directly - no server, no supertest. Env is
   saved and restored around each case (`withEnv` in `test/tailor.test.js:36`).
-- **Coverage gaps:** `api/share.js` has no tests, and **none of `index.html` is tested** - no
-  `decide()`, no `recommend()`, no rendering.
-- **Sweeping the engine without a browser** is possible and worth doing after any change to
-  `decide()`/`recommend()`. Extract the DOM-free region and drive it from Node:
-
-  ```bash
-  { echo 'var window={matchMedia:function(){return{matches:false};}};'; sed -n '356,1369p' index.html; } > /tmp/engine.js
-  ```
-
-  Then `require` it, loop the 2592 answer combinations, and assert on `r.mods`. The current
-  numbers: **2592 combinations, mean 17.7 cards, max 24, mean 12.0 badged "now", max 16, and
-  zero cards missing an alternative or a layer.**
+- **Coverage gaps:** `api/share.js` has no tests, and **none of `index.html`'s rendering is
+  tested** - no canvas, no `renderResults`, no wiring. `decide()` and `recommend()` are
+  covered by the sweep below.
+- **Run everything:** `npm run verify` - the tests, then the engine sweep. About 5 s, exit 0
+  green, exit 1 red. Run it after any `decide()`/`recommend()` change. `npm run sweep` runs
+  the sweep alone.
+- **The sweep** drives all 2592 answer combinations through `recommend()` outside a browser.
+  `scripts/engine.js` slices the engine region of `index.html` between the
+  `/* ENGINE:START */` and `/* ENGINE:END */` comments and loads it as a module. It is
+  anchored on those markers and never on line numbers, because this file drifts constantly -
+  the previous recipe here extracted by line number and had been dead for 400 lines of drift
+  before anyone noticed, because nothing ever ran it.
+- **What it asserts, beyond the counts:** every card carries alternatives and a layer; every
+  `role` is in `ROLE2STAGE`; the max result never exceeds the `cleanStack` cap in
+  `api/capture.js`; the answer space matches across all four places that hold it
+  (`Q_VALUES` and `CODE` in `index.html`, `VALID` in `api/share.js` and `api/capture.js`);
+  and `CHECKED` is not more than six months old. Every parse in it is fail-closed - anything
+  it cannot read is a failure, never a silent pass.
+- **Current numbers:** 2592 combinations, mean 17.7 cards, max 24, mean 12.0 badged "now",
+  max 16, zero cards missing an alternative or a layer. Do not hand-copy these anywhere;
+  `npm run sweep` prints them.
 
 ## Not to be hand-edited / regenerated
 
